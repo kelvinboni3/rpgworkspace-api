@@ -1,0 +1,2 @@
+// Use Cases (CQRS Commands e Queries) serão criados aqui.
+// Exemplo: RegisterUser/RegisterUserCommand.cs, GetCampaigns/GetCampaignsQuery.cs, etc.

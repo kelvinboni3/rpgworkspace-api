@@ -1,0 +1,2 @@
+// DTOs (Data Transfer Objects) serão criados aqui por contexto/funcionalidade.
+// Exemplo: Auth/LoginRequest.cs, Auth/TokenResponse.cs, etc.
