@@ -14,6 +14,10 @@ public sealed class Character : BaseEntity
     public int Level { get; private set; }
     public CharacterStatus Status { get; private set; }
     public string? PortraitUrl { get; private set; }
+    public int? HpCurrent { get; private set; }
+    public int? HpMax { get; private set; }
+    public int? MpCurrent { get; private set; }
+    public int? MpMax { get; private set; }
 
     // Navigation
     public Campaign Campaign { get; private set; } = null!;
@@ -80,6 +84,15 @@ public sealed class Character : BaseEntity
     public void UpdatePortrait(string? portraitUrl)
     {
         PortraitUrl = portraitUrl;
+        SetUpdatedAt();
+    }
+
+    public void UpdateVitals(int? hpCurrent, int? hpMax, int? mpCurrent, int? mpMax)
+    {
+        HpCurrent = hpCurrent;
+        HpMax = hpMax;
+        MpCurrent = mpCurrent;
+        MpMax = mpMax;
         SetUpdatedAt();
     }
 }

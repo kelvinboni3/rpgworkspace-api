@@ -103,6 +103,22 @@ public sealed class CharacterService : ICharacterService
         return ToResponse(character);
     }
 
+    public async Task<CharacterResponse> UpdateVitalsAsync(
+        Guid characterId, UpdateCharacterVitalsRequest request, Guid requestingUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
+        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
+        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
+        EnsureIsMember(workspace, requestingUserId);
+        EnsureCanManageCharacter(workspace, requestingUserId, character);
+
+        character.UpdateVitals(request.HpCurrent, request.HpMax, request.MpCurrent, request.MpMax);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ToResponse(character);
+    }
+
     public async Task DeleteAsync(
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
@@ -153,5 +169,6 @@ public sealed class CharacterService : ICharacterService
 
     private static CharacterResponse ToResponse(Character c) =>
         new(c.Id.ToString(), c.CampaignId.ToString(), c.UserId.ToString(), c.Name, c.Description,
-            c.Race, c.Class, c.Level, c.Status, c.PortraitUrl, c.CreatedAt, c.UpdatedAt);
+            c.Race, c.Class, c.Level, c.Status, c.PortraitUrl,
+            c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax, c.CreatedAt, c.UpdatedAt);
 }

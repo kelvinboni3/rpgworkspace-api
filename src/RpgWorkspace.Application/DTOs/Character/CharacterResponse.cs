@@ -13,6 +13,10 @@ public sealed record CharacterResponse(
     int Level,
     CharacterStatus Status,
     string? PortraitUrl,
+    int? HpCurrent,
+    int? HpMax,
+    int? MpCurrent,
+    int? MpMax,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );

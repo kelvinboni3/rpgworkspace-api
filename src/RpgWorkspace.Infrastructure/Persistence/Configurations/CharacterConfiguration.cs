@@ -54,6 +54,18 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasColumnName("portrait_url")
             .HasColumnType("text");
 
+        builder.Property(c => c.HpCurrent)
+            .HasColumnName("hp_current");
+
+        builder.Property(c => c.HpMax)
+            .HasColumnName("hp_max");
+
+        builder.Property(c => c.MpCurrent)
+            .HasColumnName("mp_current");
+
+        builder.Property(c => c.MpMax)
+            .HasColumnName("mp_max");
+
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

@@ -130,6 +130,32 @@ public class CharactersController : ApiController
         }
     }
 
+    /// <summary>Atualiza os vitais (PV/PM) de um personagem.</summary>
+    [HttpPut("{id:guid}/vitals")]
+    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateVitals(
+        Guid id,
+        [FromBody] UpdateCharacterVitalsRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterService.UpdateVitalsAsync(id, request, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
     /// <summary>Exclui um personagem.</summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
