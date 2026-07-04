@@ -26,6 +26,8 @@ public class AppDbContext : DbContext
     public DbSet<WikiPage> WikiPages => Set<WikiPage>();
     public DbSet<WorldLibraryItem> WorldLibraryItems => Set<WorldLibraryItem>();
     public DbSet<WorkspaceInvite> WorkspaceInvites => Set<WorkspaceInvite>();
+    public DbSet<CharacterTab> CharacterTabs => Set<CharacterTab>();
+    public DbSet<CharacterTabEntry> CharacterTabEntries => Set<CharacterTabEntry>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<SessionTag> SessionTags => Set<SessionTag>();
     public DbSet<NpcTag> NpcTags => Set<NpcTag>();
