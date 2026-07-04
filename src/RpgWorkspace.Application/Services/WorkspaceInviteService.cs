@@ -12,17 +12,20 @@ public sealed class WorkspaceInviteService : IWorkspaceInviteService
 
     private readonly IWorkspaceInviteRepository _workspaceInviteRepository;
     private readonly IWorkspaceRepository _workspaceRepository;
+    private readonly IWorkspaceMemberRepository _workspaceMemberRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public WorkspaceInviteService(
         IWorkspaceInviteRepository workspaceInviteRepository,
         IWorkspaceRepository workspaceRepository,
+        IWorkspaceMemberRepository workspaceMemberRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork)
     {
         _workspaceInviteRepository = workspaceInviteRepository;
         _workspaceRepository = workspaceRepository;
+        _workspaceMemberRepository = workspaceMemberRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
     }
@@ -98,7 +101,8 @@ public sealed class WorkspaceInviteService : IWorkspaceInviteService
         if (workspace.IsMember(requestingUserId))
             throw new InvalidOperationException("User is already a workspace member.");
 
-        workspace.AddMember(requestingUserId, invite.Role);
+        var member = workspace.AddMember(requestingUserId, invite.Role);
+        await _workspaceMemberRepository.AddAsync(member, cancellationToken);
         invite.Accept(requestingUserId, DateTime.UtcNow);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

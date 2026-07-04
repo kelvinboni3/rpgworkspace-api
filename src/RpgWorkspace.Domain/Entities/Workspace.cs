@@ -40,7 +40,7 @@ public sealed class Workspace : BaseEntity
         SetUpdatedAt();
     }
 
-    public void AddMember(Guid userId, WorkspaceRole role)
+    public WorkspaceMember AddMember(Guid userId, WorkspaceRole role)
     {
         if (role == WorkspaceRole.Owner)
             throw new InvalidOperationException("Owner role cannot be added through membership invitation.");
@@ -48,8 +48,10 @@ public sealed class Workspace : BaseEntity
         if (IsMember(userId))
             throw new InvalidOperationException("User is already a workspace member.");
 
-        _members.Add(WorkspaceMember.Create(Id, userId, role));
+        var member = WorkspaceMember.Create(Id, userId, role);
+        _members.Add(member);
         SetUpdatedAt();
+        return member;
     }
 
     public bool IsOwner(Guid userId) => OwnerUserId == userId;

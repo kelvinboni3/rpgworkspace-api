@@ -40,6 +40,9 @@ public sealed class WorkspaceMemberRepository : IWorkspaceMemberRepository
         => _context.WorkspaceMembers
             .CountAsync(m => m.WorkspaceId == workspaceId && m.Role == WorkspaceRole.Owner, cancellationToken);
 
+    public async Task AddAsync(WorkspaceMember member, CancellationToken cancellationToken = default)
+        => await _context.WorkspaceMembers.AddAsync(member, cancellationToken);
+
     public void Remove(WorkspaceMember member)
         => _context.WorkspaceMembers.Remove(member);
 }

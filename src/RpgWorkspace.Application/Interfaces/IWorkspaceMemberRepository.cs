@@ -8,5 +8,6 @@ public interface IWorkspaceMemberRepository
     Task<WorkspaceMember?> GetByIdWithUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<WorkspaceMember>> GetAllByWorkspaceWithUsersAsync(Guid workspaceId, CancellationToken cancellationToken = default);
     Task<int> CountOwnersAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+    Task AddAsync(WorkspaceMember member, CancellationToken cancellationToken = default);
     void Remove(WorkspaceMember member);
 }
