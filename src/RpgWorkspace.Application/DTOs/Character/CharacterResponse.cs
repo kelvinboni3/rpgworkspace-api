@@ -12,6 +12,7 @@ public sealed record CharacterResponse(
     string? Class,
     int Level,
     CharacterStatus Status,
+    string? PortraitUrl,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );

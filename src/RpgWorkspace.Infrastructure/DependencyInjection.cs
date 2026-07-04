@@ -61,6 +61,8 @@ public static class DependencyInjection
         services.AddScoped<ICharacterTabService, CharacterTabService>();
         services.AddScoped<ICharacterTabEntryRepository, CharacterTabEntryRepository>();
         services.AddScoped<ICharacterTabEntryService, CharacterTabEntryService>();
+        services.AddScoped<ICharacterAttributeRepository, CharacterAttributeRepository>();
+        services.AddScoped<ICharacterAttributeService, CharacterAttributeService>();
         services.AddScoped<IImportantPersonRepository, ImportantPersonRepository>();
         services.AddScoped<IImportantPersonService, ImportantPersonService>();
         services.AddScoped<ITheoryRepository, TheoryRepository>();

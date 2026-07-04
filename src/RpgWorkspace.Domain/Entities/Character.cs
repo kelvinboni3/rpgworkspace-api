@@ -13,6 +13,7 @@ public sealed class Character : BaseEntity
     public string? Class { get; private set; }
     public int Level { get; private set; }
     public CharacterStatus Status { get; private set; }
+    public string? PortraitUrl { get; private set; }
 
     // Navigation
     public Campaign Campaign { get; private set; } = null!;
@@ -73,6 +74,12 @@ public sealed class Character : BaseEntity
         Class = characterClass;
         Level = level;
         Status = status;
+        SetUpdatedAt();
+    }
+
+    public void UpdatePortrait(string? portraitUrl)
+    {
+        PortraitUrl = portraitUrl;
         SetUpdatedAt();
     }
 }

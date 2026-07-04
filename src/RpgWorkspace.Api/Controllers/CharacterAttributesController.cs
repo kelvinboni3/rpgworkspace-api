@@ -1,72 +1,56 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RpgWorkspace.Application.DTOs.Character;
+using RpgWorkspace.Application.DTOs.CharacterAttribute;
 using RpgWorkspace.Application.Interfaces;
 
 namespace RpgWorkspace.Api.Controllers;
 
 [Authorize]
-public class CharactersController : ApiController
+public class CharacterAttributesController : ApiController
 {
-    private readonly ICharacterService _characterService;
+    private readonly ICharacterAttributeService _characterAttributeService;
 
-    public CharactersController(ICharacterService characterService)
+    public CharacterAttributesController(ICharacterAttributeService characterAttributeService)
     {
-        _characterService = characterService;
+        _characterAttributeService = characterAttributeService;
     }
 
-    /// <summary>Lista os personagens de uma campanha.</summary>
-    [HttpGet("/api/campaigns/{campaignId:guid}/characters")]
-    [ProducesResponseType(typeof(IReadOnlyList<CharacterResponse>), StatusCodes.Status200OK)]
+    /// <summary>Lista os atributos de um personagem.</summary>
+    [HttpGet("/api/characters/{characterId:guid}/attributes")]
+    [ProducesResponseType(typeof(IReadOnlyList<CharacterAttributeResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAllByCampaign(Guid campaignId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllByCharacter(Guid characterId, CancellationToken cancellationToken)
     {
         try
         {
             var userId = GetCurrentUserId();
-            var result = await _characterService.GetAllByCampaignAsync(campaignId, userId, cancellationToken);
+            var result = await _characterAttributeService.GetAllByCharacterAsync(characterId, userId, cancellationToken);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
     }
 
-    /// <summary>Retorna um personagem pelo Id.</summary>
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    /// <summary>Retorna um atributo pelo Id.</summary>
+    [HttpGet("/api/character-attributes/{id:guid}")]
+    [ProducesResponseType(typeof(CharacterAttributeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         try
         {
             var userId = GetCurrentUserId();
-            var result = await _characterService.GetByIdAsync(id, userId, cancellationToken);
+            var result = await _characterAttributeService.GetByIdAsync(id, userId, cancellationToken);
             return Ok(result);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-    }
-
-    /// <summary>Cria um personagem na campanha.</summary>
-    [HttpPost("/api/campaigns/{campaignId:guid}/characters")]
-    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Create(
-        Guid campaignId,
-        [FromBody] CreateCharacterRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var userId = GetCurrentUserId();
-            var result = await _characterService.CreateAsync(campaignId, request, userId, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
         catch (KeyNotFoundException ex)
         {
@@ -78,21 +62,57 @@ public class CharactersController : ApiController
         }
     }
 
-    /// <summary>Atualiza um personagem.</summary>
-    [HttpPut("{id:guid}")]
-    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    /// <summary>Cria um atributo para um personagem.</summary>
+    [HttpPost("/api/characters/{characterId:guid}/attributes")]
+    [ProducesResponseType(typeof(CharacterAttributeResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Create(
+        Guid characterId,
+        [FromBody] CreateCharacterAttributeRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterAttributeService.CreateAsync(characterId, request, userId, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Atualiza um atributo.</summary>
+    [HttpPut("/api/character-attributes/{id:guid}")]
+    [ProducesResponseType(typeof(CharacterAttributeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
         Guid id,
-        [FromBody] UpdateCharacterRequest request,
+        [FromBody] UpdateCharacterAttributeRequest request,
         CancellationToken cancellationToken)
     {
         try
         {
             var userId = GetCurrentUserId();
-            var result = await _characterService.UpdateAsync(id, request, userId, cancellationToken);
+            var result = await _characterAttributeService.UpdateAsync(id, request, userId, cancellationToken);
             return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (KeyNotFoundException ex)
         {
@@ -104,34 +124,8 @@ public class CharactersController : ApiController
         }
     }
 
-    /// <summary>Atualiza o retrato de um personagem.</summary>
-    [HttpPut("{id:guid}/portrait")]
-    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdatePortrait(
-        Guid id,
-        [FromBody] UpdateCharacterPortraitRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var userId = GetCurrentUserId();
-            var result = await _characterService.UpdatePortraitAsync(id, request, userId, cancellationToken);
-            return Ok(result);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-    }
-
-    /// <summary>Exclui um personagem.</summary>
-    [HttpDelete("{id:guid}")]
+    /// <summary>Exclui um atributo.</summary>
+    [HttpDelete("/api/character-attributes/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -140,7 +134,7 @@ public class CharactersController : ApiController
         try
         {
             var userId = GetCurrentUserId();
-            await _characterService.DeleteAsync(id, userId, cancellationToken);
+            await _characterAttributeService.DeleteAsync(id, userId, cancellationToken);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

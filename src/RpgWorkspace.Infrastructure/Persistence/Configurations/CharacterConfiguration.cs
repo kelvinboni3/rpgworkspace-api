@@ -50,6 +50,10 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasMaxLength(20)
             .IsRequired();
 
+        builder.Property(c => c.PortraitUrl)
+            .HasColumnName("portrait_url")
+            .HasColumnType("text");
+
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

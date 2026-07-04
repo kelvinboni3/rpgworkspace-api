@@ -28,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<WorkspaceInvite> WorkspaceInvites => Set<WorkspaceInvite>();
     public DbSet<CharacterTab> CharacterTabs => Set<CharacterTab>();
     public DbSet<CharacterTabEntry> CharacterTabEntries => Set<CharacterTabEntry>();
+    public DbSet<CharacterAttribute> CharacterAttributes => Set<CharacterAttribute>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<SessionTag> SessionTags => Set<SessionTag>();
     public DbSet<NpcTag> NpcTags => Set<NpcTag>();
