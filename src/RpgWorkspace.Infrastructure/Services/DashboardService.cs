@@ -135,95 +135,63 @@ public sealed class DashboardService : IDashboardService
         var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
         EnsureCanViewCharacterDashboard(workspace, requestingUserId, character);
 
-        var lastPlayerNote = await _context.PlayerNotes
+        var tabs = await _context.CharacterTabs
             .AsNoTracking()
-            .Where(n => n.CharacterId == characterId)
-            .OrderByDescending(n => n.CreatedAt)
-            .Select(n => new CharacterDashboardLastPlayerNoteResponse(
-                n.Id.ToString(),
-                n.Title,
-                n.CreatedAt))
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var activeTheoriesQuery = _context.Theories
-            .AsNoTracking()
-            .Where(t => t.CharacterId == characterId && t.Status == TheoryStatus.Active);
-
-        var activeOperationsQuery = _context.Operations
-            .AsNoTracking()
-            .Where(o => o.CharacterId == characterId &&
-                        (o.Status == OperationStatus.Planned || o.Status == OperationStatus.InProgress));
-
-        var activeTheoriesCount = await activeTheoriesQuery.CountAsync(cancellationToken);
-        var activeOperationsCount = await activeOperationsQuery.CountAsync(cancellationToken);
-        var importantPeopleCount = await _context.ImportantPeople
-            .AsNoTracking()
-            .CountAsync(p => p.CharacterId == characterId, cancellationToken);
-        var narrativeItemsCount = await _context.NarrativeItems
-            .AsNoTracking()
-            .CountAsync(i => i.CharacterId == characterId, cancellationToken);
-
-        var recentNotes = await _context.PlayerNotes
-            .AsNoTracking()
-            .Where(n => n.CharacterId == characterId)
-            .OrderByDescending(n => n.CreatedAt)
-            .Take(RecentLimit)
-            .Select(n => new CharacterDashboardPlayerNoteResponse(
-                n.Id.ToString(),
-                n.Title,
-                n.CreatedAt))
+            .Where(t => t.CharacterId == characterId)
+            .OrderBy(t => t.Order)
             .ToListAsync(cancellationToken);
 
-        var activeTheories = await activeTheoriesQuery
-            .OrderByDescending(t => t.Confidence)
-            .Take(RecentLimit)
-            .Select(t => new CharacterDashboardTheoryResponse(
+        var tabIds = tabs.Select(t => t.Id).ToList();
+        var tabNamesById = tabs.ToDictionary(t => t.Id, t => t.Name);
+
+        var blockCountsByTab = await _context.CharacterTabBlocks
+            .AsNoTracking()
+            .Where(b => tabIds.Contains(b.CharacterTabId))
+            .GroupBy(b => b.CharacterTabId)
+            .Select(g => new { TabId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var countByTabId = blockCountsByTab.ToDictionary(x => x.TabId, x => x.Count);
+
+        var tabSummaries = tabs
+            .Select(t => new CharacterDashboardTabSummaryResponse(
                 t.Id.ToString(),
-                t.Title,
-                t.Confidence,
-                t.Status))
-            .ToListAsync(cancellationToken);
+                t.Name,
+                countByTabId.GetValueOrDefault(t.Id)))
+            .ToList();
 
-        var activeOperations = await activeOperationsQuery
-            .OrderByDescending(o => o.CreatedAt)
-            .Take(RecentLimit)
-            .Select(o => new CharacterDashboardOperationResponse(
-                o.Id.ToString(),
-                o.Name,
-                o.Status))
-            .ToListAsync(cancellationToken);
-
-        var importantPeopleHighlights = await _context.ImportantPeople
+        var recentBlocks = await _context.CharacterTabBlocks
             .AsNoTracking()
-            .Where(p => p.CharacterId == characterId)
-            .OrderByDescending(p => p.RiskLevel)
-            .ThenByDescending(p => p.TrustLevel)
-            .ThenByDescending(p => p.UtilityLevel)
-            .ThenBy(p => p.Name)
+            .Where(b => tabIds.Contains(b.CharacterTabId))
+            .OrderByDescending(b => b.UpdatedAt ?? b.CreatedAt)
             .Take(RecentLimit)
-            .Select(p => new CharacterDashboardImportantPersonResponse(
-                p.Id.ToString(),
-                p.Name,
-                p.Type,
-                p.TrustLevel,
-                p.RiskLevel,
-                p.UtilityLevel))
+            .Select(b => new
+            {
+                b.Id,
+                b.CharacterTabId,
+                b.Type,
+                b.Title,
+                UpdatedAt = b.UpdatedAt ?? b.CreatedAt,
+            })
             .ToListAsync(cancellationToken);
+
+        var recentBlockResponses = recentBlocks
+            .Select(b => new CharacterDashboardRecentBlockResponse(
+                b.Id.ToString(),
+                b.CharacterTabId.ToString(),
+                tabNamesById.GetValueOrDefault(b.CharacterTabId, string.Empty),
+                b.Type,
+                b.Title,
+                b.UpdatedAt))
+            .ToList();
 
         return new CharacterDashboardResponse(
             character.Id.ToString(),
             character.Name,
             campaign.Id.ToString(),
             campaign.Name,
-            lastPlayerNote,
-            activeTheoriesCount,
-            activeOperationsCount,
-            importantPeopleCount,
-            narrativeItemsCount,
-            recentNotes,
-            activeTheories,
-            activeOperations,
-            importantPeopleHighlights);
+            tabSummaries,
+            recentBlockResponses);
     }
 
     private async Task<Campaign> GetCampaignOrThrowAsync(Guid id, CancellationToken ct)

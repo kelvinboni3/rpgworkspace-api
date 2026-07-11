@@ -22,6 +22,42 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.BookVolume", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CharacterTabBlockId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("character_tab_block_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("MediaAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("media_asset_id");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("order");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterTabBlockId");
+
+                    b.HasIndex("MediaAssetId");
+
+                    b.ToTable("book_volumes", (string)null);
+                });
+
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Campaign", b =>
                 {
                     b.Property<Guid>("Id")
@@ -115,9 +151,9 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<string>("PortraitUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("portrait_url");
+                    b.Property<Guid?>("PortraitAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("portrait_asset_id");
 
                     b.Property<string>("Race")
                         .HasMaxLength(100)
@@ -142,47 +178,11 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CampaignId");
 
+                    b.HasIndex("PortraitAssetId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("characters", (string)null);
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterAttribute", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("character_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("value");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("character_attributes", (string)null);
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTab", b =>
@@ -206,6 +206,10 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
+                    b.Property<int>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("order");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -217,32 +221,61 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("character_tabs", (string)null);
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTabEntry", b =>
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTabBlock", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AccentColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("accent_color");
+
                     b.Property<Guid>("CharacterTabId")
                         .HasColumnType("uuid")
                         .HasColumnName("character_tab_id");
 
                     b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("character varying(5000)")
+                        .HasColumnType("text")
                         .HasColumnName("content");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid?>("ImageAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("image_asset_id");
+
+                    b.Property<string>("Meta")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("meta");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("order");
+
+                    b.Property<Guid?>("ParentBlockId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_block_id");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("text")
+                        .HasColumnName("payload_json");
+
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -252,82 +285,44 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CharacterTabId");
 
-                    b.ToTable("character_tab_entries", (string)null);
+                    b.HasIndex("ImageAssetId");
+
+                    b.HasIndex("ParentBlockId");
+
+                    b.ToTable("character_tab_blocks", (string)null);
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.ImportantPerson", b =>
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTabBlockLink", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("Analysis")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("analysis");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("character_id");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("FirstImpression")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("first_impression");
+                    b.Property<Guid>("SourceBlockId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_block_id");
 
-                    b.Property<DateTime?>("LastContactAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_contact_at");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("notes");
-
-                    b.Property<string>("RiskLevel")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("risk_level");
-
-                    b.Property<string>("TrustLevel")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("trust_level");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("type");
+                    b.Property<Guid>("TargetBlockId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_block_id");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<string>("UtilityLevel")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("utility_level");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
+                    b.HasIndex("TargetBlockId");
 
-                    b.ToTable("important_people", (string)null);
+                    b.HasIndex("SourceBlockId", "TargetBlockId")
+                        .IsUnique();
+
+                    b.ToTable("character_tab_block_links", (string)null);
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Location", b =>
@@ -413,51 +408,36 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("location_tags", (string)null);
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.NarrativeItem", b =>
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.MediaAsset", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("character_id");
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("content");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("description");
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size_bytes");
 
-                    b.Property<string>("Importance")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("importance");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("notes");
-
-                    b.Property<string>("Origin")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("origin");
-
-                    b.Property<Guid?>("SessionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("session_id");
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)")
+                        .HasColumnName("original_file_name");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -465,36 +445,7 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
-
-                    b.HasIndex("SessionId");
-
-                    b.ToTable("narrative_items", (string)null);
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.NarrativeItemTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("NarrativeItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("narrative_item_id");
-
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tag_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TagId");
-
-                    b.HasIndex("NarrativeItemId", "TagId")
-                        .IsUnique();
-
-                    b.ToTable("narrative_item_tags", (string)null);
+                    b.ToTable("media_assets", (string)null);
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Npc", b =>
@@ -572,168 +523,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("npc_tags", (string)null);
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.Operation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("character_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Objective")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("objective");
-
-                    b.Property<string>("Plan")
-                        .HasMaxLength(3000)
-                        .HasColumnType("character varying(3000)")
-                        .HasColumnName("plan");
-
-                    b.Property<string>("RequiredResources")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("required_resources");
-
-                    b.Property<string>("Result")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("result");
-
-                    b.Property<string>("Risks")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("risks");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("operations", (string)null);
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.OperationTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("OperationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("operation_id");
-
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tag_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TagId");
-
-                    b.HasIndex("OperationId", "TagId")
-                        .IsUnique();
-
-                    b.ToTable("operation_tags", (string)null);
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.PlayerNote", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("character_id");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("character varying(5000)")
-                        .HasColumnName("content");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("SessionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("session_id");
-
-                    b.Property<string>("Tags")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("tags");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("title");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.HasIndex("SessionId");
-
-                    b.ToTable("player_notes", (string)null);
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.PlayerNoteTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("PlayerNoteId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("player_note_id");
-
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tag_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TagId");
-
-                    b.HasIndex("PlayerNoteId", "TagId")
-                        .IsUnique();
-
-                    b.ToTable("player_note_tags", (string)null);
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Quest", b =>
@@ -1029,83 +818,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("tags", (string)null);
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.Theory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("CharacterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("character_id");
-
-                    b.Property<int>("Confidence")
-                        .HasColumnType("integer")
-                        .HasColumnName("confidence");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("description");
-
-                    b.Property<string>("Evidence")
-                        .HasMaxLength(3000)
-                        .HasColumnType("character varying(3000)")
-                        .HasColumnName("evidence");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("title");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("theories", (string)null);
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.TheoryTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tag_id");
-
-                    b.Property<Guid>("TheoryId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("theory_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TagId");
-
-                    b.HasIndex("TheoryId", "TagId")
-                        .IsUnique();
-
-                    b.ToTable("theory_tags", (string)null);
-                });
-
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1116,6 +828,10 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<Guid?>("DefaultCharacterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("default_character_id");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -1455,6 +1171,23 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("world_library_item_tags", (string)null);
                 });
 
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.BookVolume", b =>
+                {
+                    b.HasOne("RpgWorkspace.Domain.Entities.CharacterTabBlock", null)
+                        .WithMany()
+                        .HasForeignKey("CharacterTabBlockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RpgWorkspace.Domain.Entities.MediaAsset", "MediaAsset")
+                        .WithMany()
+                        .HasForeignKey("MediaAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MediaAsset");
+                });
+
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Campaign", b =>
                 {
                     b.HasOne("RpgWorkspace.Domain.Entities.Workspace", "Workspace")
@@ -1474,6 +1207,11 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("RpgWorkspace.Domain.Entities.MediaAsset", null)
+                        .WithMany()
+                        .HasForeignKey("PortraitAssetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("RpgWorkspace.Domain.Entities.User", "User")
                         .WithMany("Characters")
                         .HasForeignKey("UserId")
@@ -1483,17 +1221,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.Navigation("Campaign");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterAttribute", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Character", "Character")
-                        .WithMany()
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTab", b =>
@@ -1507,26 +1234,40 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTabEntry", b =>
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTabBlock", b =>
                 {
                     b.HasOne("RpgWorkspace.Domain.Entities.CharacterTab", "CharacterTab")
-                        .WithMany()
+                        .WithMany("Blocks")
                         .HasForeignKey("CharacterTabId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("RpgWorkspace.Domain.Entities.MediaAsset", null)
+                        .WithMany()
+                        .HasForeignKey("ImageAssetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("RpgWorkspace.Domain.Entities.CharacterTabBlock", null)
+                        .WithMany("Children")
+                        .HasForeignKey("ParentBlockId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("CharacterTab");
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.ImportantPerson", b =>
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTabBlockLink", b =>
                 {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Character", "Character")
-                        .WithMany("ImportantPeople")
-                        .HasForeignKey("CharacterId")
+                    b.HasOne("RpgWorkspace.Domain.Entities.CharacterTabBlock", null)
+                        .WithMany()
+                        .HasForeignKey("SourceBlockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Character");
+                    b.HasOne("RpgWorkspace.Domain.Entities.CharacterTabBlock", null)
+                        .WithMany()
+                        .HasForeignKey("TargetBlockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Location", b =>
@@ -1557,41 +1298,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.Navigation("Tag");
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.NarrativeItem", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Character", "Character")
-                        .WithMany("NarrativeItems")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RpgWorkspace.Domain.Entities.Session", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Character");
-
-                    b.Navigation("Session");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.NarrativeItemTag", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.NarrativeItem", null)
-                        .WithMany()
-                        .HasForeignKey("NarrativeItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RpgWorkspace.Domain.Entities.Tag", "Tag")
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tag");
-                });
-
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Npc", b =>
                 {
                     b.HasOne("RpgWorkspace.Domain.Entities.Campaign", "Campaign")
@@ -1608,69 +1314,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.HasOne("RpgWorkspace.Domain.Entities.Npc", null)
                         .WithMany()
                         .HasForeignKey("NpcId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RpgWorkspace.Domain.Entities.Tag", "Tag")
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tag");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.Operation", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Character", "Character")
-                        .WithMany("Operations")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.OperationTag", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Operation", null)
-                        .WithMany()
-                        .HasForeignKey("OperationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RpgWorkspace.Domain.Entities.Tag", "Tag")
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tag");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.PlayerNote", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Character", "Character")
-                        .WithMany("PlayerNotes")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RpgWorkspace.Domain.Entities.Session", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Character");
-
-                    b.Navigation("Session");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.PlayerNoteTag", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.PlayerNote", null)
-                        .WithMany()
-                        .HasForeignKey("PlayerNoteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1786,34 +1429,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Campaign");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.Theory", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Character", "Character")
-                        .WithMany("Theories")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.TheoryTag", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.Tag", "Tag")
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RpgWorkspace.Domain.Entities.Theory", null)
-                        .WithMany()
-                        .HasForeignKey("TheoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.WikiPage", b =>
@@ -1952,17 +1567,14 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.Navigation("WorldLibraryItems");
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.Character", b =>
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTab", b =>
                 {
-                    b.Navigation("ImportantPeople");
+                    b.Navigation("Blocks");
+                });
 
-                    b.Navigation("NarrativeItems");
-
-                    b.Navigation("Operations");
-
-                    b.Navigation("PlayerNotes");
-
-                    b.Navigation("Theories");
+            modelBuilder.Entity("RpgWorkspace.Domain.Entities.CharacterTabBlock", b =>
+                {
+                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.ScheduleEvent", b =>

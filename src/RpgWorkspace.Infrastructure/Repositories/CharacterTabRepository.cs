@@ -23,7 +23,7 @@ public sealed class CharacterTabRepository : ICharacterTabRepository
     {
         return await _context.CharacterTabs
             .Where(t => t.CharacterId == characterId)
-            .OrderBy(t => t.CreatedAt)
+            .OrderBy(t => t.Order)
             .ToListAsync(cancellationToken);
     }
 

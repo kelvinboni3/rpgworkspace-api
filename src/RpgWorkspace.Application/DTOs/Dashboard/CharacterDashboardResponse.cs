@@ -7,47 +7,21 @@ public sealed record CharacterDashboardResponse(
     string CharacterName,
     string CampaignId,
     string CampaignName,
-    CharacterDashboardLastPlayerNoteResponse? LastPlayerNote,
-    int ActiveTheoriesCount,
-    int ActiveOperationsCount,
-    int ImportantPeopleCount,
-    int NarrativeItemsCount,
-    IReadOnlyList<CharacterDashboardPlayerNoteResponse> RecentNotes,
-    IReadOnlyList<CharacterDashboardTheoryResponse> ActiveTheories,
-    IReadOnlyList<CharacterDashboardOperationResponse> ActiveOperations,
-    IReadOnlyList<CharacterDashboardImportantPersonResponse> ImportantPeopleHighlights
+    IReadOnlyList<CharacterDashboardTabSummaryResponse> TabSummaries,
+    IReadOnlyList<CharacterDashboardRecentBlockResponse> RecentBlocks
 );
 
-public sealed record CharacterDashboardLastPlayerNoteResponse(
-    string Id,
-    string Title,
-    DateTime CreatedAt
+public sealed record CharacterDashboardTabSummaryResponse(
+    string TabId,
+    string TabName,
+    int BlockCount
 );
 
-public sealed record CharacterDashboardPlayerNoteResponse(
+public sealed record CharacterDashboardRecentBlockResponse(
     string Id,
-    string Title,
-    DateTime CreatedAt
-);
-
-public sealed record CharacterDashboardTheoryResponse(
-    string Id,
-    string Title,
-    int Confidence,
-    TheoryStatus Status
-);
-
-public sealed record CharacterDashboardOperationResponse(
-    string Id,
-    string Name,
-    OperationStatus Status
-);
-
-public sealed record CharacterDashboardImportantPersonResponse(
-    string Id,
-    string Name,
-    ImportantPersonType Type,
-    EvaluationLevel TrustLevel,
-    EvaluationLevel RiskLevel,
-    EvaluationLevel UtilityLevel
+    string TabId,
+    string TabName,
+    CharacterTabBlockType Type,
+    string? Title,
+    DateTime UpdatedAt
 );

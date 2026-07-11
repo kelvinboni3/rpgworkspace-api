@@ -55,39 +55,3 @@ public sealed class WorldLibraryItemTag : BaseEntity
     private WorldLibraryItemTag() { }
     public static WorldLibraryItemTag Create(Guid worldLibraryItemId, Guid tagId) => new() { WorldLibraryItemId = worldLibraryItemId, TagId = tagId };
 }
-
-public sealed class PlayerNoteTag : BaseEntity
-{
-    public Guid PlayerNoteId { get; private set; }
-    public Guid TagId { get; private set; }
-    public Tag Tag { get; private set; } = null!;
-    private PlayerNoteTag() { }
-    public static PlayerNoteTag Create(Guid playerNoteId, Guid tagId) => new() { PlayerNoteId = playerNoteId, TagId = tagId };
-}
-
-public sealed class TheoryTag : BaseEntity
-{
-    public Guid TheoryId { get; private set; }
-    public Guid TagId { get; private set; }
-    public Tag Tag { get; private set; } = null!;
-    private TheoryTag() { }
-    public static TheoryTag Create(Guid theoryId, Guid tagId) => new() { TheoryId = theoryId, TagId = tagId };
-}
-
-public sealed class OperationTag : BaseEntity
-{
-    public Guid OperationId { get; private set; }
-    public Guid TagId { get; private set; }
-    public Tag Tag { get; private set; } = null!;
-    private OperationTag() { }
-    public static OperationTag Create(Guid operationId, Guid tagId) => new() { OperationId = operationId, TagId = tagId };
-}
-
-public sealed class NarrativeItemTag : BaseEntity
-{
-    public Guid NarrativeItemId { get; private set; }
-    public Guid TagId { get; private set; }
-    public Tag Tag { get; private set; } = null!;
-    private NarrativeItemTag() { }
-    public static NarrativeItemTag Create(Guid narrativeItemId, Guid tagId) => new() { NarrativeItemId = narrativeItemId, TagId = tagId };
-}

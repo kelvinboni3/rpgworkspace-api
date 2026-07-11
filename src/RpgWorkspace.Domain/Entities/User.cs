@@ -7,6 +7,7 @@ public sealed class User : BaseEntity
     public string Name { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
     public string PasswordHash { get; private set; } = string.Empty;
+    public Guid? DefaultCharacterId { get; private set; }
 
     // Navigation
     public IReadOnlyCollection<Character> Characters => _characters.AsReadOnly();
@@ -31,6 +32,12 @@ public sealed class User : BaseEntity
     public void UpdateProfile(string name)
     {
         Name = name;
+        SetUpdatedAt();
+    }
+
+    public void SetDefaultCharacter(Guid? characterId)
+    {
+        DefaultCharacterId = characterId;
         SetUpdatedAt();
     }
 }

@@ -56,7 +56,9 @@ public sealed class CharacterTabService : ICharacterTabService
         var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
         EnsureCanManageTabs(workspace, requestingUserId, character);
 
-        var tab = CharacterTab.Create(characterId, request.Name);
+        var existingTabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
+        var nextOrder = existingTabs.Count == 0 ? 0 : existingTabs.Max(t => t.Order) + 1;
+        var tab = CharacterTab.Create(characterId, request.Name, nextOrder);
 
         await _characterTabRepository.AddAsync(tab, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -136,6 +138,7 @@ public sealed class CharacterTabService : ICharacterTabService
             tab.Id.ToString(),
             tab.CharacterId.ToString(),
             tab.Name,
+            tab.Order,
             tab.CreatedAt,
             tab.UpdatedAt);
     }

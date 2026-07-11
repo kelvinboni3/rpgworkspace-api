@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RpgWorkspace.Application.Interfaces;
 using RpgWorkspace.Application.Services;
+using RpgWorkspace.Infrastructure.Configuration;
 using RpgWorkspace.Infrastructure.Persistence;
 using RpgWorkspace.Infrastructure.Repositories;
 using RpgWorkspace.Infrastructure.Security;
@@ -27,6 +28,11 @@ public static class DependencyInjection
         // JWT Settings
         services.Configure<JwtSettings>(options =>
             configuration.GetSection(JwtSettings.SectionName).Bind(options)
+        );
+
+        // Anthropic Settings
+        services.Configure<AnthropicSettings>(options =>
+            configuration.GetSection(AnthropicSettings.SectionName).Bind(options)
         );
 
         // Services
@@ -55,22 +61,10 @@ public static class DependencyInjection
         services.AddScoped<IQuestService, QuestService>();
         services.AddScoped<ICharacterRepository, CharacterRepository>();
         services.AddScoped<ICharacterService, CharacterService>();
-        services.AddScoped<IPlayerNoteRepository, PlayerNoteRepository>();
-        services.AddScoped<IPlayerNoteService, PlayerNoteService>();
         services.AddScoped<ICharacterTabRepository, CharacterTabRepository>();
         services.AddScoped<ICharacterTabService, CharacterTabService>();
-        services.AddScoped<ICharacterTabEntryRepository, CharacterTabEntryRepository>();
-        services.AddScoped<ICharacterTabEntryService, CharacterTabEntryService>();
-        services.AddScoped<ICharacterAttributeRepository, CharacterAttributeRepository>();
-        services.AddScoped<ICharacterAttributeService, CharacterAttributeService>();
-        services.AddScoped<IImportantPersonRepository, ImportantPersonRepository>();
-        services.AddScoped<IImportantPersonService, ImportantPersonService>();
-        services.AddScoped<ITheoryRepository, TheoryRepository>();
-        services.AddScoped<ITheoryService, TheoryService>();
-        services.AddScoped<IOperationRepository, OperationRepository>();
-        services.AddScoped<IOperationService, OperationService>();
-        services.AddScoped<INarrativeItemRepository, NarrativeItemRepository>();
-        services.AddScoped<INarrativeItemService, NarrativeItemService>();
+        services.AddScoped<ICharacterTabBlockRepository, CharacterTabBlockRepository>();
+        services.AddScoped<ICharacterTabBlockService, CharacterTabBlockService>();
         services.AddScoped<IScheduleEventRepository, ScheduleEventRepository>();
         services.AddScoped<IScheduleResponseRepository, ScheduleResponseRepository>();
         services.AddScoped<IScheduleService, ScheduleService>();
@@ -80,6 +74,13 @@ public static class DependencyInjection
         services.AddScoped<IWorldLibraryItemService, WorldLibraryItemService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IDashboardService, DashboardService>();
+
+        services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
+        services.AddScoped<IBookVolumeRepository, BookVolumeRepository>();
+        services.AddScoped<IBookVolumeService, BookVolumeService>();
+
+        services.AddScoped<INoteStructuringGateway, AnthropicNoteStructuringGateway>();
+        services.AddScoped<INoteStructuringService, NoteStructuringService>();
 
         return services;
     }

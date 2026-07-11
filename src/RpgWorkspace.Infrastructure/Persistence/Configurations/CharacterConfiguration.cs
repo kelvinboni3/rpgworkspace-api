@@ -50,9 +50,13 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasMaxLength(20)
             .IsRequired();
 
-        builder.Property(c => c.PortraitUrl)
-            .HasColumnName("portrait_url")
-            .HasColumnType("text");
+        builder.Property(c => c.PortraitAssetId)
+            .HasColumnName("portrait_asset_id");
+
+        builder.HasOne<MediaAsset>()
+            .WithMany()
+            .HasForeignKey(c => c.PortraitAssetId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Property(c => c.HpCurrent)
             .HasColumnName("hp_current");
@@ -72,50 +76,5 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
 
         builder.Property(c => c.UpdatedAt)
             .HasColumnName("updated_at");
-
-        builder.HasMany(c => c.PlayerNotes)
-            .WithOne(n => n.Character)
-            .HasForeignKey(n => n.CharacterId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Metadata
-            .FindNavigation(nameof(Character.PlayerNotes))!
-            .SetPropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.HasMany(c => c.ImportantPeople)
-            .WithOne(p => p.Character)
-            .HasForeignKey(p => p.CharacterId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Metadata
-            .FindNavigation(nameof(Character.ImportantPeople))!
-            .SetPropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.HasMany(c => c.Theories)
-            .WithOne(t => t.Character)
-            .HasForeignKey(t => t.CharacterId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Metadata
-            .FindNavigation(nameof(Character.Theories))!
-            .SetPropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.HasMany(c => c.Operations)
-            .WithOne(o => o.Character)
-            .HasForeignKey(o => o.CharacterId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Metadata
-            .FindNavigation(nameof(Character.Operations))!
-            .SetPropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.HasMany(c => c.NarrativeItems)
-            .WithOne(i => i.Character)
-            .HasForeignKey(i => i.CharacterId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Metadata
-            .FindNavigation(nameof(Character.NarrativeItems))!
-            .SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

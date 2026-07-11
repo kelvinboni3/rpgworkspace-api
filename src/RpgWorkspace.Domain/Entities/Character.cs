@@ -13,7 +13,7 @@ public sealed class Character : BaseEntity
     public string? Class { get; private set; }
     public int Level { get; private set; }
     public CharacterStatus Status { get; private set; }
-    public string? PortraitUrl { get; private set; }
+    public Guid? PortraitAssetId { get; private set; }
     public int? HpCurrent { get; private set; }
     public int? HpMax { get; private set; }
     public int? MpCurrent { get; private set; }
@@ -22,21 +22,6 @@ public sealed class Character : BaseEntity
     // Navigation
     public Campaign Campaign { get; private set; } = null!;
     public User User { get; private set; } = null!;
-
-    public IReadOnlyCollection<PlayerNote> PlayerNotes => _playerNotes.AsReadOnly();
-    private readonly List<PlayerNote> _playerNotes = [];
-
-    public IReadOnlyCollection<ImportantPerson> ImportantPeople => _importantPeople.AsReadOnly();
-    private readonly List<ImportantPerson> _importantPeople = [];
-
-    public IReadOnlyCollection<Theory> Theories => _theories.AsReadOnly();
-    private readonly List<Theory> _theories = [];
-
-    public IReadOnlyCollection<Operation> Operations => _operations.AsReadOnly();
-    private readonly List<Operation> _operations = [];
-
-    public IReadOnlyCollection<NarrativeItem> NarrativeItems => _narrativeItems.AsReadOnly();
-    private readonly List<NarrativeItem> _narrativeItems = [];
 
     // EF Core constructor
     private Character() { }
@@ -81,9 +66,9 @@ public sealed class Character : BaseEntity
         SetUpdatedAt();
     }
 
-    public void UpdatePortrait(string? portraitUrl)
+    public void SetPortrait(Guid? portraitAssetId)
     {
-        PortraitUrl = portraitUrl;
+        PortraitAssetId = portraitAssetId;
         SetUpdatedAt();
     }
 

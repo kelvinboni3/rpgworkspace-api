@@ -78,6 +78,37 @@ public class CharactersController : ApiController
         }
     }
 
+    /// <summary>Cria um personagem já com uma conta de acesso nova pro jogador.</summary>
+    [HttpPost("/api/campaigns/{campaignId:guid}/characters/with-account")]
+    [ProducesResponseType(typeof(CharacterWithAccountResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CreateWithAccount(
+        Guid campaignId,
+        [FromBody] CreateCharacterWithAccountRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterService.CreateWithAccountAsync(campaignId, request, userId, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = result.Character.Id }, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
     /// <summary>Atualiza um personagem.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
@@ -104,20 +135,49 @@ public class CharactersController : ApiController
         }
     }
 
-    /// <summary>Atualiza o retrato de um personagem.</summary>
-    [HttpPut("{id:guid}/portrait")]
+    /// <summary>Sobe o retrato de um personagem.</summary>
+    [HttpPost("{id:guid}/portrait")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
     [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdatePortrait(
-        Guid id,
-        [FromBody] UpdateCharacterPortraitRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadPortrait(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         try
         {
             var userId = GetCurrentUserId();
-            var result = await _characterService.UpdatePortraitAsync(id, request, userId, cancellationToken);
+            await using var stream = file.OpenReadStream();
+            var result = await _characterService.UploadPortraitAsync(
+                id, file.FileName, file.ContentType, file.Length, stream, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Remove o retrato de um personagem.</summary>
+    [HttpDelete("{id:guid}/portrait")]
+    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemovePortrait(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterService.RemovePortraitAsync(id, userId, cancellationToken);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -127,6 +187,24 @@ public class CharactersController : ApiController
         catch (UnauthorizedAccessException ex)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Retorna os bytes do retrato de um personagem.</summary>
+    [HttpGet("{id:guid}/portrait")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPortrait(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var (content, contentType) = await _characterService.GetPortraitContentAsync(id, userId, cancellationToken);
+            return File(content, contentType);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
         }
     }
 

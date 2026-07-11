@@ -4,5 +4,6 @@ public sealed record AuthResponse(
     string AccessToken,
     string UserId,
     string Name,
-    string Email
+    string Email,
+    string? DefaultCharacterId
 );

@@ -16,19 +16,16 @@ public class AppDbContext : DbContext
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Quest> Quests => Set<Quest>();
     public DbSet<Character> Characters => Set<Character>();
-    public DbSet<PlayerNote> PlayerNotes => Set<PlayerNote>();
-    public DbSet<ImportantPerson> ImportantPeople => Set<ImportantPerson>();
-    public DbSet<Theory> Theories => Set<Theory>();
-    public DbSet<Operation> Operations => Set<Operation>();
-    public DbSet<NarrativeItem> NarrativeItems => Set<NarrativeItem>();
     public DbSet<ScheduleEvent> ScheduleEvents => Set<ScheduleEvent>();
     public DbSet<ScheduleResponse> ScheduleResponses => Set<ScheduleResponse>();
     public DbSet<WikiPage> WikiPages => Set<WikiPage>();
     public DbSet<WorldLibraryItem> WorldLibraryItems => Set<WorldLibraryItem>();
     public DbSet<WorkspaceInvite> WorkspaceInvites => Set<WorkspaceInvite>();
     public DbSet<CharacterTab> CharacterTabs => Set<CharacterTab>();
-    public DbSet<CharacterTabEntry> CharacterTabEntries => Set<CharacterTabEntry>();
-    public DbSet<CharacterAttribute> CharacterAttributes => Set<CharacterAttribute>();
+    public DbSet<CharacterTabBlock> CharacterTabBlocks => Set<CharacterTabBlock>();
+    public DbSet<CharacterTabBlockLink> CharacterTabBlockLinks => Set<CharacterTabBlockLink>();
+    public DbSet<BookVolume> BookVolumes => Set<BookVolume>();
+    public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<SessionTag> SessionTags => Set<SessionTag>();
     public DbSet<NpcTag> NpcTags => Set<NpcTag>();
@@ -36,10 +33,6 @@ public class AppDbContext : DbContext
     public DbSet<QuestTag> QuestTags => Set<QuestTag>();
     public DbSet<WikiPageTag> WikiPageTags => Set<WikiPageTag>();
     public DbSet<WorldLibraryItemTag> WorldLibraryItemTags => Set<WorldLibraryItemTag>();
-    public DbSet<PlayerNoteTag> PlayerNoteTags => Set<PlayerNoteTag>();
-    public DbSet<TheoryTag> TheoryTags => Set<TheoryTag>();
-    public DbSet<OperationTag> OperationTags => Set<OperationTag>();
-    public DbSet<NarrativeItemTag> NarrativeItemTags => Set<NarrativeItemTag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

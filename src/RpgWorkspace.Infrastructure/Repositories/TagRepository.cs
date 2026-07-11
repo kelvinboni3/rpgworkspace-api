@@ -66,10 +66,6 @@ public sealed class TagRepository : ITagRepository
             "Quest" => await _context.QuestTags.Where(x => x.QuestId == entityId).Select(x => x.Tag).OrderBy(t => t.Name).ToListAsync(cancellationToken),
             "WikiPage" => await _context.WikiPageTags.Where(x => x.WikiPageId == entityId).Select(x => x.Tag).OrderBy(t => t.Name).ToListAsync(cancellationToken),
             "WorldLibraryItem" => await _context.WorldLibraryItemTags.Where(x => x.WorldLibraryItemId == entityId).Select(x => x.Tag).OrderBy(t => t.Name).ToListAsync(cancellationToken),
-            "PlayerNote" => await _context.PlayerNoteTags.Where(x => x.PlayerNoteId == entityId).Select(x => x.Tag).OrderBy(t => t.Name).ToListAsync(cancellationToken),
-            "Theory" => await _context.TheoryTags.Where(x => x.TheoryId == entityId).Select(x => x.Tag).OrderBy(t => t.Name).ToListAsync(cancellationToken),
-            "Operation" => await _context.OperationTags.Where(x => x.OperationId == entityId).Select(x => x.Tag).OrderBy(t => t.Name).ToListAsync(cancellationToken),
-            "NarrativeItem" => await _context.NarrativeItemTags.Where(x => x.NarrativeItemId == entityId).Select(x => x.Tag).OrderBy(t => t.Name).ToListAsync(cancellationToken),
             _ => throw new InvalidOperationException("Unsupported tag entity type.")
         };
     }
@@ -113,26 +109,6 @@ public sealed class TagRepository : ITagRepository
                 var worldLibraryItemTags = await _context.WorldLibraryItemTags.Where(x => x.WorldLibraryItemId == entityId).ToListAsync(cancellationToken);
                 _context.WorldLibraryItemTags.RemoveRange(worldLibraryItemTags);
                 await _context.WorldLibraryItemTags.AddRangeAsync(distinctTagIds.Select(id => WorldLibraryItemTag.Create(entityId, id)), cancellationToken);
-                break;
-            case "PlayerNote":
-                var playerNoteTags = await _context.PlayerNoteTags.Where(x => x.PlayerNoteId == entityId).ToListAsync(cancellationToken);
-                _context.PlayerNoteTags.RemoveRange(playerNoteTags);
-                await _context.PlayerNoteTags.AddRangeAsync(distinctTagIds.Select(id => PlayerNoteTag.Create(entityId, id)), cancellationToken);
-                break;
-            case "Theory":
-                var theoryTags = await _context.TheoryTags.Where(x => x.TheoryId == entityId).ToListAsync(cancellationToken);
-                _context.TheoryTags.RemoveRange(theoryTags);
-                await _context.TheoryTags.AddRangeAsync(distinctTagIds.Select(id => TheoryTag.Create(entityId, id)), cancellationToken);
-                break;
-            case "Operation":
-                var operationTags = await _context.OperationTags.Where(x => x.OperationId == entityId).ToListAsync(cancellationToken);
-                _context.OperationTags.RemoveRange(operationTags);
-                await _context.OperationTags.AddRangeAsync(distinctTagIds.Select(id => OperationTag.Create(entityId, id)), cancellationToken);
-                break;
-            case "NarrativeItem":
-                var narrativeItemTags = await _context.NarrativeItemTags.Where(x => x.NarrativeItemId == entityId).ToListAsync(cancellationToken);
-                _context.NarrativeItemTags.RemoveRange(narrativeItemTags);
-                await _context.NarrativeItemTags.AddRangeAsync(distinctTagIds.Select(id => NarrativeItemTag.Create(entityId, id)), cancellationToken);
                 break;
             default:
                 throw new InvalidOperationException("Unsupported tag entity type.");

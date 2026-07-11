@@ -24,11 +24,19 @@ public sealed class CharacterTabConfiguration : IEntityTypeConfiguration<Charact
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.Property(t => t.Order)
+            .HasColumnName("order")
+            .IsRequired();
+
         builder.Property(t => t.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();
 
         builder.Property(t => t.UpdatedAt)
             .HasColumnName("updated_at");
+
+        builder.Metadata
+            .FindNavigation(nameof(CharacterTab.Blocks))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

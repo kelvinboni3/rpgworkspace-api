@@ -40,7 +40,7 @@ public sealed class AuthService : IAuthService
         var token = _tokenGenerator.GenerateToken(
             user.Id.ToString(), user.Email, Enumerable.Empty<string>());
 
-        return new AuthResponse(token, user.Id.ToString(), user.Name, user.Email);
+        return new AuthResponse(token, user.Id.ToString(), user.Name, user.Email, user.DefaultCharacterId?.ToString());
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -53,6 +53,6 @@ public sealed class AuthService : IAuthService
         var token = _tokenGenerator.GenerateToken(
             user.Id.ToString(), user.Email, Enumerable.Empty<string>());
 
-        return new AuthResponse(token, user.Id.ToString(), user.Name, user.Email);
+        return new AuthResponse(token, user.Id.ToString(), user.Name, user.Email, user.DefaultCharacterId?.ToString());
     }
 }
