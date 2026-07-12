@@ -47,9 +47,9 @@ public sealed class NoteStructuringService : INoteStructuringService
         CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureCanManageTabs(workspace, requestingUserId, character);
+        var workspace = await CharacterAuthorizationHelper.ResolveWorkspaceAsync(
+            _campaignRepository, _workspaceRepository, character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
 
         var tabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
         var existingTabs = tabs.Select(t => (t.Id, t.Name)).ToList();
@@ -115,22 +115,4 @@ public sealed class NoteStructuringService : INoteStructuringService
         => await _characterRepository.GetByIdAsync(id, ct)
             ?? throw new KeyNotFoundException("Character not found.");
 
-    private async Task<Campaign> GetCampaignOrThrowAsync(Guid id, CancellationToken ct)
-        => await _campaignRepository.GetByIdAsync(id, ct)
-            ?? throw new KeyNotFoundException("Campaign not found.");
-
-    private async Task<Workspace> GetWorkspaceOrThrowAsync(Guid id, CancellationToken ct)
-        => await _workspaceRepository.GetByIdWithMembersAsync(id, ct)
-            ?? throw new KeyNotFoundException("Workspace not found.");
-
-    private static void EnsureCanManageTabs(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (!workspace.IsMember(requestingUserId))
-            throw new KeyNotFoundException("Character not found.");
-
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
-
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can perform this action.");
-    }
 }

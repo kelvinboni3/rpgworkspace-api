@@ -30,8 +30,8 @@ public sealed class CharacterTabService : ICharacterTabService
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanViewTabs(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Character tab not found.");
 
         var tabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
         return tabs.Select(ToResponse).ToList();
@@ -42,8 +42,8 @@ public sealed class CharacterTabService : ICharacterTabService
     {
         var tab = await GetCharacterTabOrThrowAsync(tabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanViewTabs(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Character tab not found.");
 
         return ToResponse(tab);
     }
@@ -53,8 +53,8 @@ public sealed class CharacterTabService : ICharacterTabService
         CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManageTabs(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab not found.");
 
         var existingTabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
         var nextOrder = existingTabs.Count == 0 ? 0 : existingTabs.Max(t => t.Order) + 1;
@@ -72,8 +72,8 @@ public sealed class CharacterTabService : ICharacterTabService
     {
         var tab = await GetCharacterTabOrThrowAsync(tabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManageTabs(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab not found.");
 
         tab.Update(request.Name);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -86,8 +86,8 @@ public sealed class CharacterTabService : ICharacterTabService
     {
         var tab = await GetCharacterTabOrThrowAsync(tabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManageTabs(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab not found.");
 
         _characterTabRepository.Remove(tab);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -101,36 +101,8 @@ public sealed class CharacterTabService : ICharacterTabService
         => await _characterRepository.GetByIdAsync(id, ct)
             ?? throw new KeyNotFoundException("Character not found.");
 
-    private async Task<Workspace> GetWorkspaceForCampaignOrThrowAsync(Guid campaignId, CancellationToken ct)
-    {
-        var campaign = await _campaignRepository.GetByIdAsync(campaignId, ct)
-            ?? throw new KeyNotFoundException("Campaign not found.");
-
-        return await _workspaceRepository.GetByIdWithMembersAsync(campaign.WorkspaceId, ct)
-            ?? throw new KeyNotFoundException("Workspace not found.");
-    }
-
-    private static void EnsureCanViewTabs(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (!workspace.IsMember(requestingUserId))
-            throw new KeyNotFoundException("Character tab not found.");
-
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
-
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can view these tabs.");
-    }
-
-    private static void EnsureCanManageTabs(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (!workspace.IsMember(requestingUserId))
-            throw new KeyNotFoundException("Character tab not found.");
-
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
-
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can perform this action.");
-    }
+    private Task<Workspace?> ResolveWorkspaceAsync(Guid? campaignId, CancellationToken ct)
+        => CharacterAuthorizationHelper.ResolveWorkspaceAsync(_campaignRepository, _workspaceRepository, campaignId, ct);
 
     private static CharacterTabResponse ToResponse(CharacterTab tab)
     {

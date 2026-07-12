@@ -18,6 +18,7 @@ public sealed class CharacterService : ICharacterService
     private readonly IUserRepository _userRepository;
     private readonly IMediaAssetRepository _mediaAssetRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly IUnitOfWork _unitOfWork;
 
     public CharacterService(
@@ -29,6 +30,7 @@ public sealed class CharacterService : ICharacterService
         IUserRepository userRepository,
         IMediaAssetRepository mediaAssetRepository,
         IPasswordHasher passwordHasher,
+        ISubscriptionService subscriptionService,
         IUnitOfWork unitOfWork)
     {
         _characterRepository = characterRepository;
@@ -39,6 +41,7 @@ public sealed class CharacterService : ICharacterService
         _userRepository = userRepository;
         _mediaAssetRepository = mediaAssetRepository;
         _passwordHasher = passwordHasher;
+        _subscriptionService = subscriptionService;
         _unitOfWork = unitOfWork;
     }
 
@@ -58,9 +61,43 @@ public sealed class CharacterService : ICharacterService
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureIsMember(workspace, requestingUserId);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        EnsureCanViewCharacter(character, workspace, requestingUserId);
+
+        return ToResponse(character);
+    }
+
+    public async Task<IReadOnlyList<CharacterResponse>> GetMineAsync(
+        Guid requestingUserId, CancellationToken cancellationToken = default)
+    {
+        var characters = await _characterRepository.GetAllByUserAsync(requestingUserId, cancellationToken);
+        return characters.Select(ToResponse).ToList();
+    }
+
+    public async Task<CharacterResponse> CreateSoloAsync(
+        Guid requestingUserId, CreateSoloCharacterRequest request, CancellationToken cancellationToken = default)
+    {
+        await _subscriptionService.EnsureCanCreateCharacterAsync(requestingUserId, cancellationToken);
+
+        var character = Character.Create(
+            campaignId: null,
+            requestingUserId,
+            request.Name,
+            request.Description,
+            request.Race,
+            request.Class,
+            request.Level,
+            request.Status);
+
+        await _characterRepository.AddAsync(character, cancellationToken);
+
+        for (var i = 0; i < DefaultTabNames.Length; i++)
+        {
+            var tab = CharacterTab.Create(character.Id, DefaultTabNames[i], i);
+            await _characterTabRepository.AddAsync(tab, cancellationToken);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ToResponse(character);
     }
@@ -148,10 +185,8 @@ public sealed class CharacterService : ICharacterService
         CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureIsMember(workspace, requestingUserId);
-        EnsureCanManageCharacter(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
 
         character.Update(request.Name, request.Description, request.Race, request.Class, request.Level, request.Status);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -164,10 +199,8 @@ public sealed class CharacterService : ICharacterService
         Guid requestingUserId, CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureIsMember(workspace, requestingUserId);
-        EnsureCanManageCharacter(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
 
         if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("Only image files are accepted.");
@@ -197,10 +230,8 @@ public sealed class CharacterService : ICharacterService
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureIsMember(workspace, requestingUserId);
-        EnsureCanManageCharacter(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
 
         if (character.PortraitAssetId.HasValue)
         {
@@ -219,9 +250,8 @@ public sealed class CharacterService : ICharacterService
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureIsMember(workspace, requestingUserId);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        EnsureCanViewCharacter(character, workspace, requestingUserId);
 
         if (!character.PortraitAssetId.HasValue)
             throw new KeyNotFoundException("Character has no portrait.");
@@ -237,10 +267,8 @@ public sealed class CharacterService : ICharacterService
         CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureIsMember(workspace, requestingUserId);
-        EnsureCanManageCharacter(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
 
         character.UpdateVitals(request.HpCurrent, request.HpMax, request.MpCurrent, request.MpMax);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -252,10 +280,8 @@ public sealed class CharacterService : ICharacterService
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
-        EnsureIsMember(workspace, requestingUserId);
-        EnsureCanManageCharacter(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
 
         _characterRepository.Remove(character);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -288,16 +314,23 @@ public sealed class CharacterService : ICharacterService
             throw new UnauthorizedAccessException("Only Owner or Master can create characters.");
     }
 
-    private static void EnsureCanManageCharacter(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
+    private Task<Workspace?> ResolveWorkspaceAsync(Guid? campaignId, CancellationToken ct)
+        => CharacterAuthorizationHelper.ResolveWorkspaceAsync(_campaignRepository, _workspaceRepository, campaignId, ct);
 
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can perform this action.");
+    private static void EnsureCanViewCharacter(Character character, Workspace? workspace, Guid requestingUserId)
+    {
+        if (workspace is null)
+        {
+            if (character.UserId != requestingUserId)
+                throw new KeyNotFoundException("Character not found.");
+            return;
+        }
+
+        EnsureIsMember(workspace, requestingUserId);
     }
 
     private static CharacterResponse ToResponse(Character c) =>
-        new(c.Id.ToString(), c.CampaignId.ToString(), c.UserId.ToString(), c.Name, c.Description,
+        new(c.Id.ToString(), c.CampaignId?.ToString(), c.UserId.ToString(), c.Name, c.Description,
             c.Race, c.Class, c.Level, c.Status,
             c.PortraitAssetId.HasValue ? $"/api/characters/{c.Id}/portrait" : null,
             c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax, c.CreatedAt, c.UpdatedAt);

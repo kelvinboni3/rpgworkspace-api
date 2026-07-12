@@ -27,6 +27,18 @@ public sealed class CharacterRepository : ICharacterRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Character>> GetAllByUserAsync(
+        Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Characters
+            .Where(c => c.UserId == userId)
+            .OrderBy(c => c.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<int> CountSoloByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+        => _context.Characters.CountAsync(c => c.UserId == userId && c.CampaignId == null, cancellationToken);
+
     public async Task AddAsync(Character character, CancellationToken cancellationToken = default)
         => await _context.Characters.AddAsync(character, cancellationToken);
 

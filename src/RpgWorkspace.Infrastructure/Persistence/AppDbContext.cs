@@ -33,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<QuestTag> QuestTags => Set<QuestTag>();
     public DbSet<WikiPageTag> WikiPageTags => Set<WikiPageTag>();
     public DbSet<WorldLibraryItemTag> WorldLibraryItemTags => Set<WorldLibraryItemTag>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

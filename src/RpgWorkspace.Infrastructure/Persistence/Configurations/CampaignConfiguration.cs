@@ -78,6 +78,7 @@ public sealed class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
         builder.HasMany(c => c.Characters)
             .WithOne(ch => ch.Campaign)
             .HasForeignKey(ch => ch.CampaignId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Metadata

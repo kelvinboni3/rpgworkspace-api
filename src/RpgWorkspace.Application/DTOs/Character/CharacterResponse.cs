@@ -4,7 +4,7 @@ namespace RpgWorkspace.Application.DTOs.Character;
 
 public sealed record CharacterResponse(
     string Id,
-    string CampaignId,
+    string? CampaignId,
     string UserId,
     string Name,
     string? Description,

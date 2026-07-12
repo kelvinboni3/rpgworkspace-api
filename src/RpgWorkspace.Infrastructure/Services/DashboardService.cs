@@ -131,8 +131,15 @@ public sealed class DashboardService : IDashboardService
             .FirstOrDefaultAsync(c => c.Id == characterId, cancellationToken)
             ?? throw new KeyNotFoundException("Character not found.");
 
-        var campaign = await GetCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        var workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
+        Campaign? campaign = null;
+        Workspace? workspace = null;
+
+        if (character.CampaignId is { } campaignId)
+        {
+            campaign = await GetCampaignOrThrowAsync(campaignId, cancellationToken);
+            workspace = await GetWorkspaceWithMembersOrThrowAsync(campaign.WorkspaceId, cancellationToken);
+        }
+
         EnsureCanViewCharacterDashboard(workspace, requestingUserId, character);
 
         var tabs = await _context.CharacterTabs
@@ -188,8 +195,8 @@ public sealed class DashboardService : IDashboardService
         return new CharacterDashboardResponse(
             character.Id.ToString(),
             character.Name,
-            campaign.Id.ToString(),
-            campaign.Name,
+            campaign?.Id.ToString(),
+            campaign?.Name,
             tabSummaries,
             recentBlockResponses);
     }
@@ -213,8 +220,15 @@ public sealed class DashboardService : IDashboardService
             throw new KeyNotFoundException(notFoundMessage);
     }
 
-    private static void EnsureCanViewCharacterDashboard(Workspace workspace, Guid userId, Character character)
+    private static void EnsureCanViewCharacterDashboard(Workspace? workspace, Guid userId, Character character)
     {
+        if (workspace is null)
+        {
+            if (character.UserId != userId)
+                throw new KeyNotFoundException("Character not found.");
+            return;
+        }
+
         EnsureIsMember(workspace, userId, "Character not found.");
 
         if (userId == character.UserId || workspace.IsOwnerOrMaster(userId))

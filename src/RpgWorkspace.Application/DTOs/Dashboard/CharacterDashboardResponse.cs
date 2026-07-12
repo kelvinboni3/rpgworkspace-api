@@ -5,8 +5,8 @@ namespace RpgWorkspace.Application.DTOs.Dashboard;
 public sealed record CharacterDashboardResponse(
     string CharacterId,
     string CharacterName,
-    string CampaignId,
-    string CampaignName,
+    string? CampaignId,
+    string? CampaignName,
     IReadOnlyList<CharacterDashboardTabSummaryResponse> TabSummaries,
     IReadOnlyList<CharacterDashboardRecentBlockResponse> RecentBlocks
 );

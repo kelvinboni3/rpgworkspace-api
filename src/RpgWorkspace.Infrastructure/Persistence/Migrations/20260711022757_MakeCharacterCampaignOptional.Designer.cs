@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RpgWorkspace.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using RpgWorkspace.Infrastructure.Persistence;
 namespace RpgWorkspace.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260711022757_MakeCharacterCampaignOptional")]
+    partial class MakeCharacterCampaignOptional
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -780,64 +783,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("session_tags", (string)null);
                 });
 
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.Subscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime?>("CurrentPeriodEnd")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("current_period_end");
-
-                    b.Property<string>("GatewayCustomerId")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("gateway_customer_id");
-
-                    b.Property<string>("GatewaySubscriptionId")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("gateway_subscription_id");
-
-                    b.Property<bool>("ManualOverride")
-                        .HasColumnType("boolean")
-                        .HasColumnName("manual_override");
-
-                    b.Property<string>("Plan")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("plan");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GatewayCustomerId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("subscriptions", (string)null);
-                });
-
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Tag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1475,17 +1420,6 @@ namespace RpgWorkspace.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Tag");
-                });
-
-            modelBuilder.Entity("RpgWorkspace.Domain.Entities.Subscription", b =>
-                {
-                    b.HasOne("RpgWorkspace.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RpgWorkspace.Domain.Entities.Tag", b =>

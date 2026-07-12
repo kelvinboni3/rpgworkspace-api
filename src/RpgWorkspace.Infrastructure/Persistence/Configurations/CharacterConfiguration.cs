@@ -16,8 +16,7 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasColumnName("id");
 
         builder.Property(c => c.CampaignId)
-            .HasColumnName("campaign_id")
-            .IsRequired();
+            .HasColumnName("campaign_id");
 
         builder.Property(c => c.UserId)
             .HasColumnName("user_id")

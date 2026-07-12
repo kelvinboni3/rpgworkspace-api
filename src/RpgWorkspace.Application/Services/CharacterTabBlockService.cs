@@ -39,8 +39,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
     {
         var tab = await GetCharacterTabOrThrowAsync(characterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanView(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Character tab block not found.");
 
         var blocks = await _characterTabBlockRepository.GetAllByTabAsync(characterTabId, cancellationToken);
         return blocks.Select(ToResponse).ToList();
@@ -52,8 +52,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanView(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Character tab block not found.");
 
         return ToResponse(block);
     }
@@ -64,8 +64,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
     {
         var tab = await GetCharacterTabOrThrowAsync(characterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         var siblings = await _characterTabBlockRepository.GetSiblingsAsync(characterTabId, null, cancellationToken);
         var nextOrder = siblings.Count == 0 ? 0 : siblings.Max(b => b.Order) + 1;
@@ -88,8 +88,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var parent = await GetBlockOrThrowAsync(parentBlockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(parent.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         if (parent.Type != CharacterTabBlockType.Collapse && parent.Type != CharacterTabBlockType.Image)
             throw new ArgumentException("Only 'Registro expansível' or 'Imagem' blocks can contain nested blocks.");
@@ -121,8 +121,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         block.Update(request.Title, request.Meta, request.Content, request.PayloadJson);
         await SyncBlockLinksAsync(block, character.Id, cancellationToken);
@@ -138,8 +138,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         if (request.Direction is not ("up" or "down"))
             throw new ArgumentException("Direction must be 'up' or 'down'.");
@@ -170,8 +170,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         block.SetAccentColor(NormalizeAccentColor(request.AccentColor));
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -201,8 +201,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
     {
         var tab = await GetCharacterTabOrThrowAsync(characterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         var siblings = await _characterTabBlockRepository.GetSiblingsAsync(characterTabId, null, cancellationToken);
         ApplyReorder(siblings, request.OrderedBlockIds);
@@ -218,8 +218,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var parent = await GetBlockOrThrowAsync(parentBlockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(parent.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         var siblings = await _characterTabBlockRepository.GetSiblingsAsync(parent.CharacterTabId, parent.Id, cancellationToken);
         ApplyReorder(siblings, request.OrderedBlockIds);
@@ -244,8 +244,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         _characterTabBlockRepository.Remove(block);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -258,8 +258,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("Only image files are accepted.");
@@ -291,8 +291,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
         if (block.ImageAssetId.HasValue)
         {
@@ -313,8 +313,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanView(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Character tab block not found.");
 
         if (!block.ImageAssetId.HasValue)
             throw new KeyNotFoundException("Block has no image.");
@@ -331,8 +331,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
         var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
         var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanView(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Character tab block not found.");
 
         var sourceBlocks = await _characterTabBlockRepository.GetBacklinksAsync(blockId, cancellationToken);
 
@@ -399,36 +399,8 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         => await _characterRepository.GetByIdAsync(id, ct)
             ?? throw new KeyNotFoundException("Character not found.");
 
-    private async Task<Workspace> GetWorkspaceForCampaignOrThrowAsync(Guid campaignId, CancellationToken ct)
-    {
-        var campaign = await _campaignRepository.GetByIdAsync(campaignId, ct)
-            ?? throw new KeyNotFoundException("Campaign not found.");
-
-        return await _workspaceRepository.GetByIdWithMembersAsync(campaign.WorkspaceId, ct)
-            ?? throw new KeyNotFoundException("Workspace not found.");
-    }
-
-    private static void EnsureCanView(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (!workspace.IsMember(requestingUserId))
-            throw new KeyNotFoundException("Character tab block not found.");
-
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
-
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can view these blocks.");
-    }
-
-    private static void EnsureCanManage(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (!workspace.IsMember(requestingUserId))
-            throw new KeyNotFoundException("Character tab block not found.");
-
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
-
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can perform this action.");
-    }
+    private Task<Workspace?> ResolveWorkspaceAsync(Guid? campaignId, CancellationToken ct)
+        => CharacterAuthorizationHelper.ResolveWorkspaceAsync(_campaignRepository, _workspaceRepository, campaignId, ct);
 
     private static CharacterTabBlockResponse ToResponse(CharacterTabBlock block)
     {

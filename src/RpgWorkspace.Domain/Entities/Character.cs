@@ -5,7 +5,7 @@ namespace RpgWorkspace.Domain.Entities;
 
 public sealed class Character : BaseEntity
 {
-    public Guid CampaignId { get; private set; }
+    public Guid? CampaignId { get; private set; }
     public Guid UserId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -19,15 +19,17 @@ public sealed class Character : BaseEntity
     public int? MpCurrent { get; private set; }
     public int? MpMax { get; private set; }
 
+    public bool IsSolo => CampaignId is null;
+
     // Navigation
-    public Campaign Campaign { get; private set; } = null!;
+    public Campaign? Campaign { get; private set; }
     public User User { get; private set; } = null!;
 
     // EF Core constructor
     private Character() { }
 
     public static Character Create(
-        Guid campaignId,
+        Guid? campaignId,
         Guid userId,
         string name,
         string? description,

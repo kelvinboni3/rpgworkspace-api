@@ -5,7 +5,9 @@ namespace RpgWorkspace.Application.Interfaces;
 public interface ICharacterService
 {
     Task<IReadOnlyList<CharacterResponse>> GetAllByCampaignAsync(Guid campaignId, Guid requestingUserId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CharacterResponse>> GetMineAsync(Guid requestingUserId, CancellationToken cancellationToken = default);
     Task<CharacterResponse> GetByIdAsync(Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default);
+    Task<CharacterResponse> CreateSoloAsync(Guid requestingUserId, CreateSoloCharacterRequest request, CancellationToken cancellationToken = default);
     Task<CharacterResponse> CreateAsync(Guid campaignId, CreateCharacterRequest request, Guid requestingUserId, CancellationToken cancellationToken = default);
     Task<CharacterWithAccountResponse> CreateWithAccountAsync(Guid campaignId, CreateCharacterWithAccountRequest request, Guid requestingUserId, CancellationToken cancellationToken = default);
     Task<CharacterResponse> UpdateAsync(Guid characterId, UpdateCharacterRequest request, Guid requestingUserId, CancellationToken cancellationToken = default);

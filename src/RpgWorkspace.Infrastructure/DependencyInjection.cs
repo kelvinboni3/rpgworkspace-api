@@ -82,6 +82,10 @@ public static class DependencyInjection
         services.AddScoped<INoteStructuringGateway, AnthropicNoteStructuringGateway>();
         services.AddScoped<INoteStructuringService, NoteStructuringService>();
 
+        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<ISubscriptionGateway, StripeSubscriptionGateway>();
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
+
         return services;
     }
 }

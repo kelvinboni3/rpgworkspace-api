@@ -42,8 +42,8 @@ public sealed class BookVolumeService : IBookVolumeService
     {
         var block = await GetBlockOrThrowAsync(characterTabBlockId, cancellationToken);
         var character = await GetCharacterForBlockOrThrowAsync(block, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanView(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Book volume not found.");
 
         var volumes = await _bookVolumeRepository.GetAllByBlockAsync(characterTabBlockId, cancellationToken);
         return volumes.Select(v => ToResponse(v)).ToList();
@@ -60,8 +60,8 @@ public sealed class BookVolumeService : IBookVolumeService
     {
         var block = await GetBlockOrThrowAsync(characterTabBlockId, cancellationToken);
         var character = await GetCharacterForBlockOrThrowAsync(block, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Book volume not found.");
 
         if (!string.Equals(contentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("Only PDF files are accepted.");
@@ -91,8 +91,8 @@ public sealed class BookVolumeService : IBookVolumeService
     {
         var block = await GetBlockOrThrowAsync(characterTabBlockId, cancellationToken);
         var character = await GetCharacterForBlockOrThrowAsync(block, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Book volume not found.");
 
         var siblings = await _bookVolumeRepository.GetAllByBlockAsync(characterTabBlockId, cancellationToken);
 
@@ -118,8 +118,8 @@ public sealed class BookVolumeService : IBookVolumeService
 
         var block = await GetBlockOrThrowAsync(volume.CharacterTabBlockId, cancellationToken);
         var character = await GetCharacterForBlockOrThrowAsync(block, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanManage(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Book volume not found.");
 
         var asset = await _mediaAssetRepository.GetByIdAsync(volume.MediaAssetId, cancellationToken);
 
@@ -138,8 +138,8 @@ public sealed class BookVolumeService : IBookVolumeService
 
         var block = await GetBlockOrThrowAsync(volume.CharacterTabBlockId, cancellationToken);
         var character = await GetCharacterForBlockOrThrowAsync(block, cancellationToken);
-        var workspace = await GetWorkspaceForCampaignOrThrowAsync(character.CampaignId, cancellationToken);
-        EnsureCanView(workspace, requestingUserId, character);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanView(character, workspace, requestingUserId, "Book volume not found.");
 
         return (volume.MediaAsset.Content, volume.MediaAsset.ContentType);
     }
@@ -157,36 +157,8 @@ public sealed class BookVolumeService : IBookVolumeService
             ?? throw new KeyNotFoundException("Character not found.");
     }
 
-    private async Task<Workspace> GetWorkspaceForCampaignOrThrowAsync(Guid campaignId, CancellationToken ct)
-    {
-        var campaign = await _campaignRepository.GetByIdAsync(campaignId, ct)
-            ?? throw new KeyNotFoundException("Campaign not found.");
-
-        return await _workspaceRepository.GetByIdWithMembersAsync(campaign.WorkspaceId, ct)
-            ?? throw new KeyNotFoundException("Workspace not found.");
-    }
-
-    private static void EnsureCanView(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (!workspace.IsMember(requestingUserId))
-            throw new KeyNotFoundException("Book volume not found.");
-
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
-
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can view these pages.");
-    }
-
-    private static void EnsureCanManage(Workspace workspace, Guid requestingUserId, Character character)
-    {
-        if (!workspace.IsMember(requestingUserId))
-            throw new KeyNotFoundException("Book volume not found.");
-
-        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
-            return;
-
-        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can perform this action.");
-    }
+    private Task<Workspace?> ResolveWorkspaceAsync(Guid? campaignId, CancellationToken ct)
+        => CharacterAuthorizationHelper.ResolveWorkspaceAsync(_campaignRepository, _workspaceRepository, campaignId, ct);
 
     private static BookVolumeResponse ToResponse(BookVolume volume, MediaAsset? assetOverride = null)
     {

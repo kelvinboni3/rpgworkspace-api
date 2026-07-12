@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RpgWorkspace.Application.DTOs.Character;
+using RpgWorkspace.Application.Exceptions;
 using RpgWorkspace.Application.Interfaces;
 
 namespace RpgWorkspace.Api.Controllers;
@@ -31,6 +32,35 @@ public class CharactersController : ApiController
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Lista todos os personagens do usuário autenticado (solo + campanha).</summary>
+    [HttpGet("/api/characters/mine")]
+    [ProducesResponseType(typeof(IReadOnlyList<CharacterResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMine(CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _characterService.GetMineAsync(userId, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Cria um personagem solo, sem campanha ou mestre.</summary>
+    [HttpPost("/api/characters/solo")]
+    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
+    public async Task<IActionResult> CreateSolo(
+        [FromBody] CreateSoloCharacterRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterService.CreateSoloAsync(userId, request, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (SubscriptionRequiredException ex)
+        {
+            return StatusCode(StatusCodes.Status402PaymentRequired, new { message = ex.Message });
         }
     }
 
