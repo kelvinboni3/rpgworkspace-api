@@ -64,7 +64,12 @@ public sealed class AnthropicCharacterNarrativeGateway : ICharacterNarrativeGate
             if (TryParseResult(text, out var result))
                 return result;
 
-            _logger.LogWarning("Anthropic character narrative call returned invalid JSON; retrying once.");
+            // A max_tokens cut is deterministic — retrying the same request truncates identically,
+            // so the retry must ask for a shorter text, not just "valid JSON".
+            var wasTruncated = response.StopReason == StopReason.MaxTokens;
+            _logger.LogWarning(
+                "Anthropic character narrative call returned invalid JSON (truncated: {Truncated}); retrying once.",
+                wasTruncated);
 
             var retryResponse = await CreateMessageAsync(
                 systemPrompt,
@@ -72,7 +77,9 @@ public sealed class AnthropicCharacterNarrativeGateway : ICharacterNarrativeGate
                 maxTokens,
                 cancellationToken,
                 previousAssistantText: text,
-                correctionHint: "A resposta anterior não é um JSON válido conforme o schema pedido. Responda novamente só com o JSON correto.");
+                correctionHint: wasTruncated
+                    ? "Sua resposta foi cortada por exceder o limite de tamanho. Responda novamente só com o JSON, com um texto mais curto e direto."
+                    : "A resposta anterior não é um JSON válido conforme o schema pedido. Responda novamente só com o JSON correto.");
             var retryText = ExtractText(retryResponse);
 
             if (TryParseResult(retryText, out var retryResult))

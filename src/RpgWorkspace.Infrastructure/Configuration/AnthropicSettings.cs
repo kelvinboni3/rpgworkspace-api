@@ -12,11 +12,12 @@ public sealed class AnthropicSettings
     /// blocks in one call than a single post-session note does.</summary>
     public int ImportMaxOutputTokens { get; init; } = 4096;
 
-    /// <summary>Recap is a short 1-2 paragraph "previously on..." — smaller than block structuring.</summary>
-    public int RecapMaxOutputTokens { get; init; } = 512;
+    /// <summary>Recap is 1-2 paragraphs, but a rich journal legitimately needs ~700 tokens of JSON;
+    /// 512 truncated mid-JSON on real data (structured outputs can't survive max_tokens cuts).</summary>
+    public int RecapMaxOutputTokens { get; init; } = 1536;
 
-    /// <summary>Retrospective is a 1-3 paragraph closing narrative, slightly longer than a recap.</summary>
-    public int RetrospectiveMaxOutputTokens { get; init; } = 768;
+    /// <summary>Retrospective is 1-3 paragraphs — longer than a recap, same truncation risk.</summary>
+    public int RetrospectiveMaxOutputTokens { get; init; } = 2048;
 
     public int RateLimitPerHour { get; init; } = 20;
 }
