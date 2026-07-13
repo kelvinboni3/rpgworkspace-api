@@ -46,6 +46,10 @@ public sealed class Subscription : BaseEntity
         || Status is SubscriptionStatus.Active
         || (Status is SubscriptionStatus.Trialing && CurrentPeriodEnd > DateTime.UtcNow);
 
+    /// <summary>AI features are a paid perk: the trial gets the rest of the app, but not AI.</summary>
+    public bool HasPaidAccess() =>
+        ManualOverride || Status is SubscriptionStatus.Active;
+
     public void SetManualOverride(bool enabled)
     {
         ManualOverride = enabled;

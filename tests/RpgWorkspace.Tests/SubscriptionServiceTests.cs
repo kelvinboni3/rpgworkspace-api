@@ -66,6 +66,52 @@ public class SubscriptionServiceTests
         Assert.Equal(SubscriptionStatus.None, created.Status);
     }
 
+    // ── AI gate (AI is a paid perk, excluded from the trial) ─────────────────
+
+    [Fact]
+    public async Task AiGate_blocks_active_trial()
+    {
+        var userId = Guid.NewGuid();
+        _subscriptions.Items.Add(Subscription.CreateTrial(userId, DateTime.UtcNow.AddDays(3)));
+
+        await Assert.ThrowsAsync<SubscriptionRequiredException>(
+            () => _service.EnsureAiAccessAsync(userId));
+    }
+
+    [Fact]
+    public async Task AiGate_allows_paying_subscriber()
+    {
+        var userId = Guid.NewGuid();
+        var subscription = Subscription.CreateNone(userId);
+        subscription.ApplyGatewayState(SubscriptionStatus.Active, "price_x", "cus_123", "sub_123", DateTime.UtcNow.AddMonths(1));
+        _subscriptions.Items.Add(subscription);
+
+        await _service.EnsureAiAccessAsync(userId);
+    }
+
+    [Fact]
+    public async Task AiGate_allows_manual_override_founder_friends()
+    {
+        var userId = Guid.NewGuid();
+        var subscription = Subscription.CreateTrial(userId, DateTime.UtcNow.AddDays(3));
+        subscription.SetManualOverride(true);
+        _subscriptions.Items.Add(subscription);
+
+        await _service.EnsureAiAccessAsync(userId);
+    }
+
+    [Fact]
+    public async Task AiGate_blocks_canceled_subscription()
+    {
+        var userId = Guid.NewGuid();
+        var subscription = Subscription.CreateNone(userId);
+        subscription.ApplyGatewayState(SubscriptionStatus.Canceled, "price_x", "cus_123", "sub_123", null);
+        _subscriptions.Items.Add(subscription);
+
+        await Assert.ThrowsAsync<SubscriptionRequiredException>(
+            () => _service.EnsureAiAccessAsync(userId));
+    }
+
     // ── Webhook handling ─────────────────────────────────────────────────────
 
     [Fact]

@@ -8,5 +8,6 @@ public sealed record SubscriptionResponse(
     string? Plan,
     DateTime? CurrentPeriodEnd,
     bool ManualOverride,
-    bool IsActive
+    bool IsActive,
+    bool HasAiAccess
 );

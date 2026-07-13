@@ -23,6 +23,7 @@ public class NoteStructuringController : ApiController
     [HttpPost("/api/characters/{characterId:guid}/notes/structure")]
     [ProducesResponseType(typeof(StructureNoteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
@@ -46,6 +47,10 @@ public class NoteStructuringController : ApiController
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
+        catch (SubscriptionRequiredException ex)
+        {
+            return StatusCode(StatusCodes.Status402PaymentRequired, new { message = ex.Message });
+        }
         catch (AiServiceUnavailableException ex)
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
@@ -56,6 +61,7 @@ public class NoteStructuringController : ApiController
     [HttpPost("/api/characters/{characterId:guid}/notes/import")]
     [ProducesResponseType(typeof(StructureNoteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
@@ -78,6 +84,10 @@ public class NoteStructuringController : ApiController
         catch (UnauthorizedAccessException ex)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+        catch (SubscriptionRequiredException ex)
+        {
+            return StatusCode(StatusCodes.Status402PaymentRequired, new { message = ex.Message });
         }
         catch (AiServiceUnavailableException ex)
         {

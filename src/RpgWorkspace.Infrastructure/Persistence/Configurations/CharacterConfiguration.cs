@@ -73,6 +73,13 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasColumnName("retrospective_text")
             .HasColumnType("text");
 
+        builder.Property(c => c.RecapText)
+            .HasColumnName("recap_text")
+            .HasColumnType("text");
+
+        builder.Property(c => c.RecapGeneratedAt)
+            .HasColumnName("recap_generated_at");
+
         builder.Property(c => c.AccentColor)
             .HasColumnName("accent_color")
             .HasMaxLength(20);

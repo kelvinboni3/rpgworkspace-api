@@ -24,6 +24,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
     private readonly ICharacterTabRepository _characterTabRepository;
     private readonly ICharacterTabBlockRepository _characterTabBlockRepository;
     private readonly ICharacterNarrativeGateway _narrativeGateway;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly IUnitOfWork _unitOfWork;
 
     public CharacterNarrativeService(
@@ -33,6 +34,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
         ICharacterTabRepository characterTabRepository,
         ICharacterTabBlockRepository characterTabBlockRepository,
         ICharacterNarrativeGateway narrativeGateway,
+        ISubscriptionService subscriptionService,
         IUnitOfWork unitOfWork)
     {
         _characterRepository = characterRepository;
@@ -41,6 +43,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
         _characterTabRepository = characterTabRepository;
         _characterTabBlockRepository = characterTabBlockRepository;
         _narrativeGateway = narrativeGateway;
+        _subscriptionService = subscriptionService;
         _unitOfWork = unitOfWork;
     }
 
@@ -53,7 +56,11 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
         var text = await _narrativeGateway.GenerateRecapAsync(
             characterContext, existingTabs, existingBlocks, cancellationToken);
 
-        return new CharacterRecapResponse(text);
+        var generatedAt = DateTime.UtcNow;
+        character.SetRecap(text, generatedAt);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new CharacterRecapResponse(text, generatedAt);
     }
 
     public async Task<CharacterRetrospectiveResponse> GenerateRetrospectiveAsync(
@@ -119,6 +126,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
         var workspace = await CharacterAuthorizationHelper.ResolveWorkspaceAsync(
             _campaignRepository, _workspaceRepository, character.CampaignId, cancellationToken);
         CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
+        await _subscriptionService.EnsureAiAccessAsync(requestingUserId, cancellationToken);
 
         var tabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
         var existingTabs = tabs.Select(t => (t.Id, t.Name)).ToList();

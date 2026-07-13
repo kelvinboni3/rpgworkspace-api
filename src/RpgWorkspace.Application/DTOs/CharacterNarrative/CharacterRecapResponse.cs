@@ -1,3 +1,3 @@
 namespace RpgWorkspace.Application.DTOs.CharacterNarrative;
 
-public sealed record CharacterRecapResponse(string Recap);
+public sealed record CharacterRecapResponse(string Recap, DateTime GeneratedAt);

@@ -11,4 +11,7 @@ public interface ISubscriptionService
 
     /// <summary>Throws SubscriptionRequiredException if the user has no active subscription and has already used the free solo character.</summary>
     Task EnsureCanCreateCharacterAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Throws SubscriptionRequiredException unless the user is a paying subscriber (or ManualOverride) — AI is excluded from the trial.</summary>
+    Task EnsureAiAccessAsync(Guid userId, CancellationToken cancellationToken = default);
 }

@@ -19,6 +19,8 @@ public sealed class Character : BaseEntity
     public int? MpCurrent { get; private set; }
     public int? MpMax { get; private set; }
     public string? RetrospectiveText { get; private set; }
+    public string? RecapText { get; private set; }
+    public DateTime? RecapGeneratedAt { get; private set; }
     public string? AccentColor { get; private set; }
 
     public bool IsSolo => CampaignId is null;
@@ -88,6 +90,13 @@ public sealed class Character : BaseEntity
     public void SetRetrospective(string? retrospectiveText)
     {
         RetrospectiveText = retrospectiveText;
+        SetUpdatedAt();
+    }
+
+    public void SetRecap(string recapText, DateTime generatedAtUtc)
+    {
+        RecapText = recapText;
+        RecapGeneratedAt = generatedAtUtc;
         SetUpdatedAt();
     }
 

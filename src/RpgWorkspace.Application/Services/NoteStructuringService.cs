@@ -23,6 +23,7 @@ public sealed class NoteStructuringService : INoteStructuringService
     private readonly ICharacterTabRepository _characterTabRepository;
     private readonly ICharacterTabBlockRepository _characterTabBlockRepository;
     private readonly INoteStructuringGateway _noteStructuringGateway;
+    private readonly ISubscriptionService _subscriptionService;
 
     public NoteStructuringService(
         ICharacterRepository characterRepository,
@@ -30,7 +31,8 @@ public sealed class NoteStructuringService : INoteStructuringService
         IWorkspaceRepository workspaceRepository,
         ICharacterTabRepository characterTabRepository,
         ICharacterTabBlockRepository characterTabBlockRepository,
-        INoteStructuringGateway noteStructuringGateway)
+        INoteStructuringGateway noteStructuringGateway,
+        ISubscriptionService subscriptionService)
     {
         _characterRepository = characterRepository;
         _campaignRepository = campaignRepository;
@@ -38,6 +40,7 @@ public sealed class NoteStructuringService : INoteStructuringService
         _characterTabRepository = characterTabRepository;
         _characterTabBlockRepository = characterTabBlockRepository;
         _noteStructuringGateway = noteStructuringGateway;
+        _subscriptionService = subscriptionService;
     }
 
     private delegate Task<NoteStructuringResult> GatewayCall(
@@ -72,6 +75,7 @@ public sealed class NoteStructuringService : INoteStructuringService
         var workspace = await CharacterAuthorizationHelper.ResolveWorkspaceAsync(
             _campaignRepository, _workspaceRepository, character.CampaignId, cancellationToken);
         CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
+        await _subscriptionService.EnsureAiAccessAsync(requestingUserId, cancellationToken);
 
         var tabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
         var existingTabs = tabs.Select(t => (t.Id, t.Name)).ToList();

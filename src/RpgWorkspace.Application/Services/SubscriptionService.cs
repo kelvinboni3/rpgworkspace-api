@@ -79,6 +79,16 @@ public sealed class SubscriptionService : ISubscriptionService
             "Your trial has ended. Subscribe to keep creating characters.");
     }
 
+    public async Task EnsureAiAccessAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var subscription = await GetOrCreateAsync(userId, cancellationToken);
+        if (subscription.HasPaidAccess())
+            return;
+
+        throw new SubscriptionRequiredException(
+            "AI features are not included in the trial. Subscribe to unlock them.");
+    }
+
     private async Task<Subscription> GetOrCreateAsync(Guid userId, CancellationToken cancellationToken)
     {
         var subscription = await _subscriptionRepository.GetByUserIdAsync(userId, cancellationToken);
@@ -93,5 +103,5 @@ public sealed class SubscriptionService : ISubscriptionService
     }
 
     private static SubscriptionResponse ToResponse(Subscription s) =>
-        new(s.UserId.ToString(), s.Status, s.Plan, s.CurrentPeriodEnd, s.ManualOverride, s.IsActive());
+        new(s.UserId.ToString(), s.Status, s.Plan, s.CurrentPeriodEnd, s.ManualOverride, s.IsActive(), s.HasPaidAccess());
 }

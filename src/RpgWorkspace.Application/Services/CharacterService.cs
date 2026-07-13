@@ -363,5 +363,6 @@ public sealed class CharacterService : ICharacterService
         new(c.Id.ToString(), c.CampaignId?.ToString(), c.UserId.ToString(), c.Name, c.Description,
             c.Race, c.Class, c.Level, c.Status,
             c.PortraitAssetId.HasValue ? $"/api/characters/{c.Id}/portrait" : null,
-            c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax, c.RetrospectiveText, c.AccentColor, c.CreatedAt, c.UpdatedAt);
+            c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax, c.RetrospectiveText,
+            c.RecapText, c.RecapGeneratedAt, c.AccentColor, c.CreatedAt, c.UpdatedAt);
 }

@@ -18,6 +18,8 @@ public sealed record CharacterResponse(
     int? MpCurrent,
     int? MpMax,
     string? RetrospectiveText,
+    string? RecapText,
+    DateTime? RecapGeneratedAt,
     string? AccentColor,
     DateTime CreatedAt,
     DateTime? UpdatedAt

@@ -22,6 +22,7 @@ public class CharacterNarrativeController : ApiController
     /// <summary>Usa IA (Claude Haiku 4.5) para gerar um recap curto ("anteriormente, nessa história...") do estado atual do personagem.</summary>
     [HttpPost("/api/characters/{characterId:guid}/recap")]
     [ProducesResponseType(typeof(CharacterRecapResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
@@ -42,6 +43,10 @@ public class CharacterNarrativeController : ApiController
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
+        catch (SubscriptionRequiredException ex)
+        {
+            return StatusCode(StatusCodes.Status402PaymentRequired, new { message = ex.Message });
+        }
         catch (AiServiceUnavailableException ex)
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
@@ -51,6 +56,7 @@ public class CharacterNarrativeController : ApiController
     /// <summary>Usa IA (Claude Haiku 4.5) para gerar e salvar a retrospectiva final da jornada do personagem.</summary>
     [HttpPost("/api/characters/{characterId:guid}/retrospective")]
     [ProducesResponseType(typeof(CharacterRetrospectiveResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
@@ -70,6 +76,10 @@ public class CharacterNarrativeController : ApiController
         catch (UnauthorizedAccessException ex)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+        catch (SubscriptionRequiredException ex)
+        {
+            return StatusCode(StatusCodes.Status402PaymentRequired, new { message = ex.Message });
         }
         catch (AiServiceUnavailableException ex)
         {
