@@ -18,6 +18,8 @@ public sealed class Character : BaseEntity
     public int? HpMax { get; private set; }
     public int? MpCurrent { get; private set; }
     public int? MpMax { get; private set; }
+    public string? RetrospectiveText { get; private set; }
+    public string? AccentColor { get; private set; }
 
     public bool IsSolo => CampaignId is null;
 
@@ -80,6 +82,18 @@ public sealed class Character : BaseEntity
         HpMax = hpMax;
         MpCurrent = mpCurrent;
         MpMax = mpMax;
+        SetUpdatedAt();
+    }
+
+    public void SetRetrospective(string? retrospectiveText)
+    {
+        RetrospectiveText = retrospectiveText;
+        SetUpdatedAt();
+    }
+
+    public void SetAccentColor(string? accentColor)
+    {
+        AccentColor = accentColor;
         SetUpdatedAt();
     }
 }

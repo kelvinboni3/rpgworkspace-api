@@ -276,6 +276,36 @@ public sealed class CharacterService : ICharacterService
         return ToResponse(character);
     }
 
+    public async Task<CharacterResponse> UpdateAccentColorAsync(
+        Guid characterId, UpdateCharacterAccentColorRequest request, Guid requestingUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
+
+        character.SetAccentColor(NormalizeAccentColor(request.AccentColor));
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ToResponse(character);
+    }
+
+    private static readonly HashSet<string> AllowedAccentColors = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "gold", "crimson", "violet",
+    };
+
+    private static string? NormalizeAccentColor(string? accentColor)
+    {
+        if (string.IsNullOrWhiteSpace(accentColor))
+            return null;
+
+        if (!AllowedAccentColors.Contains(accentColor))
+            throw new ArgumentException($"Invalid accent color: {accentColor}.");
+
+        return accentColor.ToLowerInvariant();
+    }
+
     public async Task DeleteAsync(
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
@@ -333,5 +363,5 @@ public sealed class CharacterService : ICharacterService
         new(c.Id.ToString(), c.CampaignId?.ToString(), c.UserId.ToString(), c.Name, c.Description,
             c.Race, c.Class, c.Level, c.Status,
             c.PortraitAssetId.HasValue ? $"/api/characters/{c.Id}/portrait" : null,
-            c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax, c.CreatedAt, c.UpdatedAt);
+            c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax, c.RetrospectiveText, c.AccentColor, c.CreatedAt, c.UpdatedAt);
 }

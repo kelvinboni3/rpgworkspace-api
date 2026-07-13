@@ -69,6 +69,14 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
         builder.Property(c => c.MpMax)
             .HasColumnName("mp_max");
 
+        builder.Property(c => c.RetrospectiveText)
+            .HasColumnName("retrospective_text")
+            .HasColumnType("text");
+
+        builder.Property(c => c.AccentColor)
+            .HasColumnName("accent_color")
+            .HasMaxLength(20);
+
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

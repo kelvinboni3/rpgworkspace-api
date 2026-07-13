@@ -17,6 +17,8 @@ public sealed record CharacterResponse(
     int? HpMax,
     int? MpCurrent,
     int? MpMax,
+    string? RetrospectiveText,
+    string? AccentColor,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );

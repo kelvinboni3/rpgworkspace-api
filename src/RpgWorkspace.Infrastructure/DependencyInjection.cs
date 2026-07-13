@@ -89,6 +89,9 @@ public static class DependencyInjection
         services.AddScoped<INoteStructuringGateway, AnthropicNoteStructuringGateway>();
         services.AddScoped<INoteStructuringService, NoteStructuringService>();
 
+        services.AddScoped<ICharacterNarrativeGateway, AnthropicCharacterNarrativeGateway>();
+        services.AddScoped<ICharacterNarrativeService, CharacterNarrativeService>();
+
         services.AddScoped<ICharacterExportService, CharacterExportService>();
 
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();

@@ -264,6 +264,37 @@ public class CharactersController : ApiController
         }
     }
 
+    /// <summary>Atualiza a cor de destaque do personagem (gold, crimson, violet, ou null).</summary>
+    [HttpPut("{id:guid}/accent-color")]
+    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateAccentColor(
+        Guid id,
+        [FromBody] UpdateCharacterAccentColorRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterService.UpdateAccentColorAsync(id, request, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
     /// <summary>Exclui um personagem.</summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
