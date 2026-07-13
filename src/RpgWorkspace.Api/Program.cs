@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using RpgWorkspace.Api.Extensions;
 using RpgWorkspace.Api.Middlewares;
@@ -8,8 +9,25 @@ using RpgWorkspace.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// The placeholder secret is committed in appsettings.json — anyone could forge tokens with it.
+if (!builder.Environment.IsDevelopment()
+    && (builder.Configuration["JwtSettings:Secret"] ?? string.Empty).StartsWith("CHANGE-THIS"))
+{
+    throw new InvalidOperationException(
+        "JwtSettings:Secret must be set via environment variable (JwtSettings__Secret) outside Development.");
+}
+
 // ── Services ────────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
+
+// TLS terminates at the host's reverse proxy (Railway/Render) — without these headers the app
+// sees plain http and the password-reset rate limiter sees the proxy's IP for every user.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
@@ -67,6 +85,8 @@ builder.Services.AddRateLimiter(options =>
 
 // ── Pipeline ─────────────────────────────────────────────────────────────────
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 app.UseMiddleware<ExceptionMiddleware>();
 

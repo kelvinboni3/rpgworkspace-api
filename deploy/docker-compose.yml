@@ -1,0 +1,62 @@
+# Stack completo num VPS único (Vultr São Paulo).
+# Layout esperado no VPS:
+#   /opt/rpgworkspace/rpgworkspace-api/       (clone deste repo; este arquivo em deploy/)
+#   /opt/rpgworkspace/rpgworkspace-frontend/  (clone do front; dist/ gerado pelo deploy.sh)
+# Configuração: copiar .env.example para .env nesta pasta e preencher.
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rpgworkspace
+      POSTGRES_USER: rpgworkspace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # Só o loopback do host — migrations/restore/backup entram por túnel SSH, nunca pela internet.
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rpgworkspace -d rpgworkspace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ..
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=rpgworkspace;Username=rpgworkspace;Password=${POSTGRES_PASSWORD}
+      JwtSettings__Secret: ${JWT_SECRET}
+      Anthropic__ApiKey: ${ANTHROPIC_API_KEY}
+      Resend__ApiKey: ${RESEND_API_KEY}
+      Resend__FromEmail: ${RESEND_FROM_EMAIL}
+      Resend__FrontendBaseUrl: https://${DOMAIN}
+      Cors__AllowedOrigins__0: https://${DOMAIN}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../rpgworkspace-frontend/dist:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

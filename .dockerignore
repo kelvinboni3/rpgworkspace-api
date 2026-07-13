@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+.git/
+.gitignore
+CLAUDE.md
+ESCOPO_PROJETO.md
+# Leftovers from the old disk-based book storage — current code stores uploads in Postgres.
+src/RpgWorkspace.Api/wwwroot/uploads/
