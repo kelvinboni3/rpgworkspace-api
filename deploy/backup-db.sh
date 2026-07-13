@@ -21,7 +21,7 @@ ls -1t "$BACKUP_DIR"/rpgworkspace_*.dump | tail -n +15 | xargs -r rm
 # Configurar uma vez com `rclone config`, remote chamado "offsite" (Backblaze B2 ou
 # Cloudflare R2, tier grátis). Sem o remote configurado, o passo é pulado com aviso.
 if command -v rclone >/dev/null && rclone listremotes 2>/dev/null | grep -q '^offsite:'; then
-  rclone copy "$FILE" offsite:rpgworkspace-backups/
+  rclone copy "$FILE" offsite:aventurario-backups/
   echo "offsite ok"
 else
   echo "AVISO: remote rclone 'offsite' não configurado — backup só existe no disco do VPS"
