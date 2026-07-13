@@ -29,6 +29,20 @@ public sealed class StripeSubscriptionGateway : ISubscriptionGateway
         var client = new StripeClient(_settings.SecretKey);
         var sessions = new SessionService(client);
 
+        try
+        {
+            return await CreateSessionAsync(sessions, userId, cancellationToken);
+        }
+        catch (StripeException ex)
+        {
+            // Account under review, payment methods disabled, Stripe outage — the frontend
+            // already renders 501 as "payments not available yet", which is the honest state.
+            throw new NotSupportedException("Payment gateway is temporarily unavailable.", ex);
+        }
+    }
+
+    private async Task<string> CreateSessionAsync(SessionService sessions, Guid userId, CancellationToken cancellationToken)
+    {
         var session = await sessions.CreateAsync(new SessionCreateOptions
         {
             Mode = "subscription",
