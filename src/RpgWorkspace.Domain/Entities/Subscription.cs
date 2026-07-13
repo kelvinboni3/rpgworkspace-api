@@ -19,6 +19,8 @@ public sealed class Subscription : BaseEntity
     // EF Core constructor
     private Subscription() { }
 
+    public const int DefaultTrialDays = 7;
+
     public static Subscription CreateNone(Guid userId)
     {
         return new Subscription
@@ -28,8 +30,21 @@ public sealed class Subscription : BaseEntity
         };
     }
 
-    /// <summary>ManualOverride is a dev-only escape hatch until a real gateway is wired up.</summary>
-    public bool IsActive() => ManualOverride || Status is SubscriptionStatus.Active or SubscriptionStatus.Trialing;
+    public static Subscription CreateTrial(Guid userId, DateTime trialEndsAtUtc)
+    {
+        return new Subscription
+        {
+            UserId = userId,
+            Status = SubscriptionStatus.Trialing,
+            CurrentPeriodEnd = trialEndsAtUtc,
+        };
+    }
+
+    /// <summary>ManualOverride grants permanent free access (founder friends); it also bypasses gateway state.</summary>
+    public bool IsActive() =>
+        ManualOverride
+        || Status is SubscriptionStatus.Active
+        || (Status is SubscriptionStatus.Trialing && CurrentPeriodEnd > DateTime.UtcNow);
 
     public void SetManualOverride(bool enabled)
     {

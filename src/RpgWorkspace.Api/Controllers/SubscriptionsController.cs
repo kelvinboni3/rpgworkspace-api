@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RpgWorkspace.Application.DTOs.Subscription;
+using RpgWorkspace.Application.Exceptions;
 using RpgWorkspace.Application.Interfaces;
 
 namespace RpgWorkspace.Api.Controllers;
@@ -80,6 +81,10 @@ public class SubscriptionsController : ApiController
         catch (NotSupportedException ex)
         {
             return StatusCode(StatusCodes.Status501NotImplemented, new { message = ex.Message });
+        }
+        catch (InvalidWebhookSignatureException)
+        {
+            return BadRequest();
         }
     }
 

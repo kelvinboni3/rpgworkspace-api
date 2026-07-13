@@ -17,6 +17,7 @@ public sealed class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
     private readonly IEmailGateway _emailGateway;
+    private readonly ISubscriptionRepository _subscriptionRepository;
 
     public AuthService(
         IUserRepository userRepository,
@@ -24,7 +25,8 @@ public sealed class AuthService : IAuthService
         ITokenGenerator tokenGenerator,
         IPasswordHasher passwordHasher,
         IPasswordResetTokenRepository passwordResetTokenRepository,
-        IEmailGateway emailGateway)
+        IEmailGateway emailGateway,
+        ISubscriptionRepository subscriptionRepository)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
@@ -32,6 +34,7 @@ public sealed class AuthService : IAuthService
         _passwordHasher = passwordHasher;
         _passwordResetTokenRepository = passwordResetTokenRepository;
         _emailGateway = emailGateway;
+        _subscriptionRepository = subscriptionRepository;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
@@ -46,6 +49,11 @@ public sealed class AuthService : IAuthService
         var user = User.Create(request.Name, request.Email, passwordHash);
 
         await _userRepository.AddAsync(user, cancellationToken);
+
+        // Trial starts at signup (not at first character), so the countdown is honest from day one.
+        var trial = Subscription.CreateTrial(user.Id, DateTime.UtcNow.AddDays(Subscription.DefaultTrialDays));
+        await _subscriptionRepository.AddAsync(trial, cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var token = _tokenGenerator.GenerateToken(

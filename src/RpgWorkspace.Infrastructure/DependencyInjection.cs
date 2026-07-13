@@ -40,6 +40,11 @@ public static class DependencyInjection
             configuration.GetSection(ResendSettings.SectionName).Bind(options)
         );
 
+        // Stripe Settings
+        services.Configure<StripeSettings>(options =>
+            configuration.GetSection(StripeSettings.SectionName).Bind(options)
+        );
+
         // Services
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITokenGenerator, JwtTokenGenerator>();

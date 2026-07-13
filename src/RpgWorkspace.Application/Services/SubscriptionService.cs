@@ -7,21 +7,16 @@ namespace RpgWorkspace.Application.Services;
 
 public sealed class SubscriptionService : ISubscriptionService
 {
-    private const int FreeSoloCharacterLimit = 1;
-
     private readonly ISubscriptionRepository _subscriptionRepository;
-    private readonly ICharacterRepository _characterRepository;
     private readonly ISubscriptionGateway _subscriptionGateway;
     private readonly IUnitOfWork _unitOfWork;
 
     public SubscriptionService(
         ISubscriptionRepository subscriptionRepository,
-        ICharacterRepository characterRepository,
         ISubscriptionGateway subscriptionGateway,
         IUnitOfWork unitOfWork)
     {
         _subscriptionRepository = subscriptionRepository;
-        _characterRepository = characterRepository;
         _subscriptionGateway = subscriptionGateway;
         _unitOfWork = unitOfWork;
     }
@@ -42,9 +37,20 @@ public sealed class SubscriptionService : ISubscriptionService
     public async Task HandleWebhookAsync(string payload, string signature, CancellationToken cancellationToken = default)
     {
         var webhookEvent = await _subscriptionGateway.ParseWebhookEventAsync(payload, signature, cancellationToken);
+        if (webhookEvent is null)
+            return; // Event type we don't care about — acknowledge so the gateway stops retrying.
 
-        var subscription = await _subscriptionRepository.GetByGatewayCustomerIdAsync(webhookEvent.GatewayCustomerId, cancellationToken)
-            ?? throw new KeyNotFoundException("Subscription not found for gateway customer.");
+        // The first event for a new subscriber arrives before our row knows its gateway customer id,
+        // so fall back to the userId we planted in the subscription's metadata at checkout.
+        var subscription = webhookEvent.GatewayCustomerId is not null
+            ? await _subscriptionRepository.GetByGatewayCustomerIdAsync(webhookEvent.GatewayCustomerId, cancellationToken)
+            : null;
+
+        if (subscription is null && webhookEvent.UserId is Guid userId)
+            subscription = await _subscriptionRepository.GetByUserIdAsync(userId, cancellationToken);
+
+        if (subscription is null)
+            return; // Unknown customer (e.g. deleted account) — nothing to update.
 
         subscription.ApplyGatewayState(
             webhookEvent.Status, webhookEvent.Plan, webhookEvent.GatewayCustomerId,
@@ -69,12 +75,8 @@ public sealed class SubscriptionService : ISubscriptionService
         if (subscription.IsActive())
             return;
 
-        var soloCount = await _characterRepository.CountSoloByUserAsync(userId, cancellationToken);
-        if (soloCount < FreeSoloCharacterLimit)
-            return;
-
         throw new SubscriptionRequiredException(
-            "Free plan allows 1 solo character. Subscribe to create more.");
+            "Your trial has ended. Subscribe to keep creating characters.");
     }
 
     private async Task<Subscription> GetOrCreateAsync(Guid userId, CancellationToken cancellationToken)
