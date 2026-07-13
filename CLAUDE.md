@@ -26,7 +26,7 @@ dotnet ef migrations add <Name> --project src/RpgWorkspace.Infrastructure --star
 dotnet ef database update --project src/RpgWorkspace.Infrastructure --startup-project src/RpgWorkspace.Api
 ```
 
-- There is **no test project** in the solution yet (`RpgWorkspace.sln` only lists Domain/Application/Infrastructure/Api). If you add tests, wire a new project into the `.sln` and this section.
+- Tests live in `tests/RpgWorkspace.Tests` (xUnit, wired into the `.sln`): `dotnet test tests/RpgWorkspace.Tests`. Coverage is deliberately minimal — auth + subscription-gate + webhook logic (the money paths), using hand-rolled fakes in `Fakes.cs` (no mocking library). Add new money-path tests there before touching subscription/auth code.
 - Swagger UI is only enabled in `Development` (`Program.cs` gates `UseSwaggerWithUi()` behind `IsDevelopment()`), reachable at the API root once running.
 - Requires a local PostgreSQL instance matching `ConnectionStrings:DefaultConnection` in `src/RpgWorkspace.Api/appsettings.json` (prod-shaped, db `rpgworkspace`) / `appsettings.Development.json` (db `rpgworkspace_dev`). Both files currently commit real-looking dev secrets (JWT key, DB password) — treat them as placeholders to replace before any real deployment, not as secrets to protect in this repo.
 - `src/RpgWorkspace.Api/RpgWorkspace.Api.http` still references the scaffolded `/weatherforecast/` endpoint from the project template — it doesn't reflect real routes; don't rely on it.
