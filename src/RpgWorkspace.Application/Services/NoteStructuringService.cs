@@ -40,11 +40,33 @@ public sealed class NoteStructuringService : INoteStructuringService
         _noteStructuringGateway = noteStructuringGateway;
     }
 
-    public async Task<StructureNoteResponse> StructureNoteAsync(
+    private delegate Task<NoteStructuringResult> GatewayCall(
+        string text,
+        CharacterContext character,
+        IReadOnlyList<(Guid Id, string Name)> existingTabs,
+        IReadOnlyList<ExistingBlockContext> existingBlocks,
+        CancellationToken cancellationToken);
+
+    public Task<StructureNoteResponse> StructureNoteAsync(
         Guid characterId,
         StructureNoteRequest request,
         Guid requestingUserId,
         CancellationToken cancellationToken = default)
+        => ProcessAsync(characterId, request.NoteText, requestingUserId, _noteStructuringGateway.StructureAsync, cancellationToken);
+
+    public Task<StructureNoteResponse> ImportSheetAsync(
+        Guid characterId,
+        ImportSheetRequest request,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default)
+        => ProcessAsync(characterId, request.SheetText, requestingUserId, _noteStructuringGateway.ImportSheetAsync, cancellationToken);
+
+    private async Task<StructureNoteResponse> ProcessAsync(
+        Guid characterId,
+        string text,
+        Guid requestingUserId,
+        GatewayCall gatewayCall,
+        CancellationToken cancellationToken)
     {
         var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
         var workspace = await CharacterAuthorizationHelper.ResolveWorkspaceAsync(
@@ -69,17 +91,16 @@ public sealed class NoteStructuringService : INoteStructuringService
         var characterContext = new CharacterContext(
             character.Name, character.Race, character.Class, character.Level, character.Description);
 
-        var suggestions = await _noteStructuringGateway.StructureAsync(
-            request.NoteText, characterContext, existingTabs, existingBlocks, cancellationToken);
+        var result = await gatewayCall(text, characterContext, existingTabs, existingBlocks, cancellationToken);
 
-        var validated = suggestions
+        var validated = result.Suggestions
             .Where(s => AllowedBlockTypes.Contains(s.Type))
             .Select(s => Resolve(s, blocksById, tabNamesById, validTabIds))
             .Where(s => s is not null)
             .Select(s => s!)
             .ToList();
 
-        return new StructureNoteResponse(validated);
+        return new StructureNoteResponse(result.Summary, validated);
     }
 
     private static SuggestedBlockDto? Resolve(

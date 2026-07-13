@@ -52,6 +52,39 @@ public class NoteStructuringController : ApiController
         }
     }
 
+    /// <summary>Usa IA (Claude Haiku 4.5) para extrair uma ficha de personagem colada (de outra ferramenta, PDF copiado, etc.) em blocos estruturados.</summary>
+    [HttpPost("/api/characters/{characterId:guid}/notes/import")]
+    [ProducesResponseType(typeof(StructureNoteResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> Import(
+        Guid characterId,
+        [FromBody] ImportSheetRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _noteStructuringService.ImportSheetAsync(characterId, request, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+        catch (AiServiceUnavailableException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
+        }
+    }
+
     private Guid GetCurrentUserId()
     {
         var sub = User.FindFirstValue(ClaimTypes.NameIdentifier)
