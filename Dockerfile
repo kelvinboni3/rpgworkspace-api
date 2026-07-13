@@ -3,12 +3,13 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Restore first so dependency layers cache independently of source changes.
-COPY RpgWorkspace.sln ./
+# Restore the Api project (pulls the other three transitively), NOT the .sln —
+# the solution also lists tests/, which is never copied into the image.
 COPY src/RpgWorkspace.Domain/RpgWorkspace.Domain.csproj src/RpgWorkspace.Domain/
 COPY src/RpgWorkspace.Application/RpgWorkspace.Application.csproj src/RpgWorkspace.Application/
 COPY src/RpgWorkspace.Infrastructure/RpgWorkspace.Infrastructure.csproj src/RpgWorkspace.Infrastructure/
 COPY src/RpgWorkspace.Api/RpgWorkspace.Api.csproj src/RpgWorkspace.Api/
-RUN dotnet restore RpgWorkspace.sln
+RUN dotnet restore src/RpgWorkspace.Api/RpgWorkspace.Api.csproj
 
 COPY src/ src/
 RUN dotnet publish src/RpgWorkspace.Api/RpgWorkspace.Api.csproj -c Release -o /app/publish -p:UseAppHost=false
