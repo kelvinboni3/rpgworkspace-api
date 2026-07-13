@@ -208,6 +208,87 @@ public sealed class SearchService : ISearchService
             .ToList();
     }
 
+    public async Task<IReadOnlyList<SearchResultResponse>> SearchCharacterAsync(
+        Guid characterId,
+        string? term,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var character = await _context.Characters
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == characterId, cancellationToken)
+            ?? throw new KeyNotFoundException("Character not found.");
+
+        Workspace? workspace = null;
+        if (character.CampaignId is { } campaignId)
+        {
+            var campaign = await _context.Campaigns
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == campaignId, cancellationToken)
+                ?? throw new KeyNotFoundException("Campaign not found.");
+
+            workspace = await _context.Workspaces
+                .AsNoTracking()
+                .Include(w => w.Members)
+                .FirstOrDefaultAsync(w => w.Id == campaign.WorkspaceId, cancellationToken)
+                ?? throw new KeyNotFoundException("Workspace not found.");
+        }
+
+        EnsureCanViewCharacter(workspace, requestingUserId, character);
+
+        var normalizedTerm = term?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedTerm))
+            return [];
+
+        var pattern = $"%{normalizedTerm}%";
+
+        var tabs = await _context.CharacterTabs
+            .AsNoTracking()
+            .Where(t => t.CharacterId == characterId)
+            .ToListAsync(cancellationToken);
+
+        var tabIds = tabs.Select(t => t.Id).ToList();
+        var tabNamesById = tabs.ToDictionary(t => t.Id, t => t.Name);
+
+        var blocks = await _context.CharacterTabBlocks
+            .AsNoTracking()
+            .Where(b => tabIds.Contains(b.CharacterTabId) &&
+                        ((b.Title != null && EF.Functions.ILike(b.Title, pattern)) ||
+                         (b.Content != null && EF.Functions.ILike(b.Content, pattern))))
+            .Take(MaxResults)
+            .ToListAsync(cancellationToken);
+
+        return blocks
+            .Select(b =>
+            {
+                var tabName = tabNamesById.GetValueOrDefault(b.CharacterTabId, "?");
+                var title = string.IsNullOrWhiteSpace(b.Title) ? tabName : b.Title!;
+                var description = string.IsNullOrWhiteSpace(b.Title) ? b.Content : $"{tabName} · {b.Content}";
+                return Result(b.Id, "CharacterTabBlock", title, description, $"/api/character-tab-blocks/{b.Id}", false);
+            })
+            .OrderBy(r => r.Title)
+            .Take(MaxResults)
+            .ToList();
+    }
+
+    private static void EnsureCanViewCharacter(Workspace? workspace, Guid requestingUserId, Character character)
+    {
+        if (workspace is null)
+        {
+            if (character.UserId != requestingUserId)
+                throw new KeyNotFoundException("Character not found.");
+            return;
+        }
+
+        if (!workspace.IsMember(requestingUserId))
+            throw new KeyNotFoundException("Character not found.");
+
+        if (requestingUserId == character.UserId || workspace.IsOwnerOrMaster(requestingUserId))
+            return;
+
+        throw new UnauthorizedAccessException("Only Owner, Master or the character owner can search this character.");
+    }
+
     private static SearchResultResponse Result(
         Guid id,
         string type,

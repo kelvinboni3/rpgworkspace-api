@@ -9,4 +9,10 @@ public interface ISearchService
         string? term,
         Guid requestingUserId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<SearchResultResponse>> SearchCharacterAsync(
+        Guid characterId,
+        string? term,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default);
 }
