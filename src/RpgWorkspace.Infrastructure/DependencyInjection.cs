@@ -35,11 +35,18 @@ public static class DependencyInjection
             configuration.GetSection(AnthropicSettings.SectionName).Bind(options)
         );
 
+        // Resend Settings
+        services.Configure<ResendSettings>(options =>
+            configuration.GetSection(ResendSettings.SectionName).Bind(options)
+        );
+
         // Services
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+        services.AddScoped<IEmailGateway, ResendEmailGateway>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<IWorkspaceService, WorkspaceService>();

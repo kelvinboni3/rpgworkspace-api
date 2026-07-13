@@ -18,6 +18,7 @@ builder.Services.AddSwagger();
 builder.Services.AddHealthChecksConfiguration(builder.Configuration);
 
 var aiRateLimitPerHour = builder.Configuration.GetValue("Anthropic:RateLimitPerHour", 20);
+var passwordResetRateLimitPerHour = builder.Configuration.GetValue("Resend:RateLimitPerHour", 5);
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -25,9 +26,14 @@ builder.Services.AddRateLimiter(options =>
 
     options.OnRejected = async (context, cancellationToken) =>
     {
+        var policyName = context.HttpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+        var message = policyName == "password-reset"
+            ? "Muitas tentativas. Tente novamente mais tarde."
+            : "Limite de uso da IA atingido. Tente novamente mais tarde.";
+
         context.HttpContext.Response.ContentType = "application/json";
         await context.HttpContext.Response.WriteAsync(
-            JsonSerializer.Serialize(new { message = "Limite de uso da IA atingido. Tente novamente mais tarde." }),
+            JsonSerializer.Serialize(new { message }),
             cancellationToken);
     };
 
@@ -40,6 +46,19 @@ builder.Services.AddRateLimiter(options =>
         return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = aiRateLimitPerHour,
+            Window = TimeSpan.FromHours(1),
+            QueueLimit = 0,
+        });
+    });
+
+    // Anonymous endpoint (no user identity yet) — partition by IP instead of user id.
+    options.AddPolicy("password-reset", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = passwordResetRateLimitPerHour,
             Window = TimeSpan.FromHours(1),
             QueueLimit = 0,
         });

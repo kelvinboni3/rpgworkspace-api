@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RpgWorkspace.Application.DTOs.Auth;
+using RpgWorkspace.Application.Exceptions;
 using RpgWorkspace.Application.Interfaces;
 
 namespace RpgWorkspace.Api.Controllers;
@@ -50,6 +52,38 @@ public class AuthController : ApiController
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Envia um e-mail de redefinição de senha, se o e-mail existir. Sempre retorna 200 (não revela se o e-mail está cadastrado).</summary>
+    [EnableRateLimiting("password-reset")]
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.RequestPasswordResetAsync(request, cancellationToken);
+        return Ok(new { message = "Se o e-mail existir, enviaremos um link de recuperação." });
+    }
+
+    /// <summary>Redefine a senha usando o token recebido por e-mail.</summary>
+    [EnableRateLimiting("password-reset")]
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _authService.ResetPasswordAsync(request, cancellationToken);
+            return Ok(new { message = "Senha redefinida com sucesso." });
+        }
+        catch (InvalidPasswordResetTokenException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

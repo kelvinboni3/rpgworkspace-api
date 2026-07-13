@@ -40,4 +40,10 @@ public sealed class User : BaseEntity
         DefaultCharacterId = characterId;
         SetUpdatedAt();
     }
+
+    public void SetPasswordHash(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+        SetUpdatedAt();
+    }
 }
