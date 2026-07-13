@@ -33,7 +33,7 @@ public sealed class ResendEmailGateway : IEmailGateway
         {
             from = $"{_settings.FromName} <{_settings.FromEmail}>",
             to = new[] { toEmail },
-            subject = "Redefinir sua senha — RPG Workspace",
+            subject = "Redefinir sua senha — Aventurário",
             html = BuildHtmlBody(toName, resetUrl),
         };
 
@@ -64,7 +64,7 @@ public sealed class ResendEmailGateway : IEmailGateway
 
         return $"""
             <p>Olá, {safeName}.</p>
-            <p>Recebemos um pedido para redefinir a senha da sua conta no RPG Workspace. Se foi você, clique no link abaixo (válido por 1 hora):</p>
+            <p>Recebemos um pedido para redefinir a senha da sua conta no Aventurário. Se foi você, clique no link abaixo (válido por 1 hora):</p>
             <p><a href="{safeUrl}">Redefinir minha senha</a></p>
             <p>Se você não pediu isso, pode ignorar este e-mail com segurança.</p>
             """;

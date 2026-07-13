@@ -11,7 +11,7 @@ public static class SwaggerExtensions
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "RPG Workspace API",
+                Title = "Aventurário API",
                 Version = "v1",
                 Description = "API para gerenciamento de campanhas e personagens de RPG.",
             });
@@ -47,7 +47,7 @@ public static class SwaggerExtensions
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "RPG Workspace API v1");
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Aventurário API v1");
             options.RoutePrefix = "swagger";
         });
 
