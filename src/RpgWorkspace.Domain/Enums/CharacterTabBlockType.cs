@@ -10,4 +10,5 @@ public enum CharacterTabBlockType
     Divider = 6,
     Collapse = 7,
     Book = 8,
+    Dice = 9,
 }
