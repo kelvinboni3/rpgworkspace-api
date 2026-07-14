@@ -28,6 +28,11 @@ public sealed class CharacterTabConfiguration : IEntityTypeConfiguration<Charact
             .HasColumnName("order")
             .IsRequired();
 
+        builder.Property(t => t.IsPublic)
+            .HasColumnName("is_public")
+            .HasDefaultValue(false)
+            .IsRequired();
+
         builder.Property(t => t.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

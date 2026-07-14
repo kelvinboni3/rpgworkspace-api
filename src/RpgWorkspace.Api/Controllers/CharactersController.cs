@@ -295,6 +295,52 @@ public class CharactersController : ApiController
         }
     }
 
+    /// <summary>Ativa o compartilhamento público do personagem (gera um token de link, se ainda não houver).</summary>
+    [HttpPost("{id:guid}/share")]
+    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> EnableSharing(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterService.EnableSharingAsync(id, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Desativa o compartilhamento público do personagem (invalida o link).</summary>
+    [HttpDelete("{id:guid}/share")]
+    [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DisableSharing(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterService.DisableSharingAsync(id, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
     /// <summary>Exclui um personagem.</summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

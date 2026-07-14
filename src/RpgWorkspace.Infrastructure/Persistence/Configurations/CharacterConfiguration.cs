@@ -84,6 +84,13 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasColumnName("accent_color")
             .HasMaxLength(20);
 
+        builder.Property(c => c.PublicShareToken)
+            .HasColumnName("public_share_token")
+            .HasMaxLength(32);
+
+        builder.HasIndex(c => c.PublicShareToken)
+            .IsUnique();
+
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

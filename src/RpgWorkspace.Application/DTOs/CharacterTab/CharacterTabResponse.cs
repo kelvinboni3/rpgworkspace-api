@@ -5,6 +5,7 @@ public sealed record CharacterTabResponse(
     string CharacterId,
     string Name,
     int Order,
+    bool IsPublic,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );

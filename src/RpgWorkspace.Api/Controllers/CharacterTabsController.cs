@@ -124,6 +124,32 @@ public class CharacterTabsController : ApiController
         }
     }
 
+    /// <summary>Define se uma aba aparece no link público read-only do personagem.</summary>
+    [HttpPut("/api/character-tabs/{id:guid}/visibility")]
+    [ProducesResponseType(typeof(CharacterTabResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetVisibility(
+        Guid id,
+        [FromBody] UpdateCharacterTabVisibilityRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterTabService.SetVisibilityAsync(id, request.IsPublic, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
     /// <summary>Exclui uma aba (e os blocos dentro dela).</summary>
     [HttpDelete("/api/character-tabs/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

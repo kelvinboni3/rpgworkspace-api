@@ -98,6 +98,7 @@ public static class DependencyInjection
         services.AddScoped<ICharacterNarrativeService, CharacterNarrativeService>();
 
         services.AddScoped<ICharacterExportService, CharacterExportService>();
+        services.AddScoped<IPublicCharacterService, PublicCharacterService>();
 
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ISubscriptionGateway, StripeSubscriptionGateway>();

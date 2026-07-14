@@ -81,6 +81,20 @@ public sealed class CharacterTabService : ICharacterTabService
         return ToResponse(tab);
     }
 
+    public async Task<CharacterTabResponse> SetVisibilityAsync(
+        Guid tabId, bool isPublic, Guid requestingUserId, CancellationToken cancellationToken = default)
+    {
+        var tab = await GetCharacterTabOrThrowAsync(tabId, cancellationToken);
+        var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab not found.");
+
+        tab.SetPublic(isPublic);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ToResponse(tab);
+    }
+
     public async Task DeleteAsync(
         Guid tabId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
@@ -111,6 +125,7 @@ public sealed class CharacterTabService : ICharacterTabService
             tab.CharacterId.ToString(),
             tab.Name,
             tab.Order,
+            tab.IsPublic,
             tab.CreatedAt,
             tab.UpdatedAt);
     }

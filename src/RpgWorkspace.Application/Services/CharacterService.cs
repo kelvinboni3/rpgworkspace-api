@@ -306,6 +306,48 @@ public sealed class CharacterService : ICharacterService
         return accentColor.ToLowerInvariant();
     }
 
+    public async Task<CharacterResponse> EnableSharingAsync(
+        Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
+    {
+        var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
+
+        if (!character.IsShared)
+        {
+            character.EnableSharing(GenerateShareToken());
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return ToResponse(character);
+    }
+
+    public async Task<CharacterResponse> DisableSharingAsync(
+        Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
+    {
+        var character = await GetCharacterOrThrowAsync(characterId, cancellationToken);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
+
+        if (character.IsShared)
+        {
+            character.DisableSharing();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return ToResponse(character);
+    }
+
+    // URL-safe token (base64url without padding) — 16 random bytes → ~22 chars, fits the 32-char column.
+    private static string GenerateShareToken()
+    {
+        var bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
+        return Convert.ToBase64String(bytes)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
+    }
+
     public async Task DeleteAsync(
         Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default)
     {
@@ -364,5 +406,5 @@ public sealed class CharacterService : ICharacterService
             c.Race, c.Class, c.Level, c.Status,
             c.PortraitAssetId.HasValue ? $"/api/characters/{c.Id}/portrait" : null,
             c.HpCurrent, c.HpMax, c.MpCurrent, c.MpMax, c.RetrospectiveText,
-            c.RecapText, c.RecapGeneratedAt, c.AccentColor, c.CreatedAt, c.UpdatedAt);
+            c.RecapText, c.RecapGeneratedAt, c.AccentColor, c.PublicShareToken, c.CreatedAt, c.UpdatedAt);
 }

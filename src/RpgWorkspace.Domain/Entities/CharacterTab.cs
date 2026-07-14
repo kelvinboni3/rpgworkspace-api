@@ -7,6 +7,7 @@ public sealed class CharacterTab : BaseEntity
     public Guid CharacterId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public int Order { get; private set; }
+    public bool IsPublic { get; private set; }
 
     // Navigation
     public Character Character { get; private set; } = null!;
@@ -30,6 +31,12 @@ public sealed class CharacterTab : BaseEntity
     public void Update(string name)
     {
         Name = name;
+        SetUpdatedAt();
+    }
+
+    public void SetPublic(bool isPublic)
+    {
+        IsPublic = isPublic;
         SetUpdatedAt();
     }
 }

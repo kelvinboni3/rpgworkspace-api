@@ -16,5 +16,7 @@ public interface ICharacterService
     Task<(byte[] Content, string ContentType)> GetPortraitContentAsync(Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default);
     Task<CharacterResponse> UpdateVitalsAsync(Guid characterId, UpdateCharacterVitalsRequest request, Guid requestingUserId, CancellationToken cancellationToken = default);
     Task<CharacterResponse> UpdateAccentColorAsync(Guid characterId, UpdateCharacterAccentColorRequest request, Guid requestingUserId, CancellationToken cancellationToken = default);
+    Task<CharacterResponse> EnableSharingAsync(Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default);
+    Task<CharacterResponse> DisableSharingAsync(Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid characterId, Guid requestingUserId, CancellationToken cancellationToken = default);
 }

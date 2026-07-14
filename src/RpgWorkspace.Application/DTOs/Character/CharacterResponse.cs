@@ -21,6 +21,7 @@ public sealed record CharacterResponse(
     string? RecapText,
     DateTime? RecapGeneratedAt,
     string? AccentColor,
+    string? PublicShareToken,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );

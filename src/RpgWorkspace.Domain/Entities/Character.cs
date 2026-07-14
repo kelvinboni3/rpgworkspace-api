@@ -22,8 +22,10 @@ public sealed class Character : BaseEntity
     public string? RecapText { get; private set; }
     public DateTime? RecapGeneratedAt { get; private set; }
     public string? AccentColor { get; private set; }
+    public string? PublicShareToken { get; private set; }
 
     public bool IsSolo => CampaignId is null;
+    public bool IsShared => PublicShareToken is not null;
 
     // Navigation
     public Campaign? Campaign { get; private set; }
@@ -103,6 +105,21 @@ public sealed class Character : BaseEntity
     public void SetAccentColor(string? accentColor)
     {
         AccentColor = accentColor;
+        SetUpdatedAt();
+    }
+
+    public void EnableSharing(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            throw new ArgumentException("Share token cannot be empty.", nameof(token));
+
+        PublicShareToken = token;
+        SetUpdatedAt();
+    }
+
+    public void DisableSharing()
+    {
+        PublicShareToken = null;
         SetUpdatedAt();
     }
 }
