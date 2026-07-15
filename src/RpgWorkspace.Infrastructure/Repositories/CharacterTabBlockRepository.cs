@@ -22,11 +22,15 @@ public sealed class CharacterTabBlockRepository : ICharacterTabBlockRepository
     public async Task<IReadOnlyList<CharacterTabBlock>> GetAllByTabAsync(
         Guid characterTabId, CancellationToken cancellationToken = default)
     {
-        return await _context.CharacterTabBlocks
-            .Include(b => b.Children.OrderBy(c => c.Order))
-            .Where(b => b.CharacterTabId == characterTabId && b.ParentBlockId == null)
+        // Carrega TODOS os blocos da aba numa query rastreada: o fix-up de navegação do EF
+        // monta a árvore inteira (Grupo → Registro expansível → conteúdo), sem depender de
+        // uma cadeia de Include/ThenInclude com profundidade fixa.
+        var all = await _context.CharacterTabBlocks
+            .Where(b => b.CharacterTabId == characterTabId)
             .OrderBy(b => b.Order)
             .ToListAsync(cancellationToken);
+
+        return all.Where(b => b.ParentBlockId == null).OrderBy(b => b.Order).ToList();
     }
 
     public async Task<IReadOnlyList<CharacterTabBlock>> GetAllByCharacterAsync(

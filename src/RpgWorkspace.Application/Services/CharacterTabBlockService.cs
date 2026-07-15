@@ -91,11 +91,15 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
         var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
         CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
 
-        if (parent.Type != CharacterTabBlockType.Collapse && parent.Type != CharacterTabBlockType.Image)
-            throw new ArgumentException("Only 'Registro expansível' or 'Imagem' blocks can contain nested blocks.");
+        if (parent.Type is not (CharacterTabBlockType.Collapse or CharacterTabBlockType.Image or CharacterTabBlockType.Group))
+            throw new ArgumentException("Only 'Grupo', 'Registro expansível' or 'Imagem' blocks can contain nested blocks.");
 
-        if (request.Type == CharacterTabBlockType.Collapse)
-            throw new ArgumentException("A 'Registro expansível' block cannot be nested inside another one.");
+        if (request.Type == CharacterTabBlockType.Group)
+            throw new ArgumentException("A 'Grupo' block cannot be nested inside another block.");
+
+        // Registro expansível aninhado só dentro de Grupo (é o caso "sala com personagens").
+        if (request.Type == CharacterTabBlockType.Collapse && parent.Type != CharacterTabBlockType.Group)
+            throw new ArgumentException("A 'Registro expansível' block can only be nested inside a 'Grupo' block.");
 
         if (request.Type == CharacterTabBlockType.Image && parent.Type == CharacterTabBlockType.Image)
             throw new ArgumentException("An 'Imagem' block cannot be nested inside another one.");
@@ -109,6 +113,62 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
 
         await _characterTabBlockRepository.AddAsync(block, cancellationToken);
         await SyncBlockLinksAsync(block, character.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ToResponse(block);
+    }
+
+    public async Task<CharacterTabBlockResponse> SetParentAsync(
+        Guid blockId, SetCharacterTabBlockParentRequest request, Guid requestingUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var block = await GetBlockOrThrowAsync(blockId, cancellationToken);
+        var tab = await GetCharacterTabOrThrowAsync(block.CharacterTabId, cancellationToken);
+        var character = await GetCharacterOrThrowAsync(tab.CharacterId, cancellationToken);
+        var workspace = await ResolveWorkspaceAsync(character.CampaignId, cancellationToken);
+        CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character tab block not found.");
+
+        if (block.ParentBlockId == request.ParentBlockId)
+            return ToResponse(block);
+
+        if (request.ParentBlockId is Guid newParentId)
+        {
+            if (newParentId == block.Id)
+                throw new ArgumentException("A block cannot be moved inside itself.");
+
+            var parent = await GetBlockOrThrowAsync(newParentId, cancellationToken);
+
+            if (parent.CharacterTabId != block.CharacterTabId)
+                throw new ArgumentException("Blocks can only be moved inside a container of the same tab.");
+
+            if (parent.ParentBlockId is not null)
+                throw new ArgumentException("Blocks can only be moved inside a top-level container.");
+
+            // Mesmas regras de aninhamento do CreateChildAsync.
+            if (parent.Type is not (CharacterTabBlockType.Collapse or CharacterTabBlockType.Image or CharacterTabBlockType.Group))
+                throw new ArgumentException("Only 'Grupo', 'Registro expansível' or 'Imagem' blocks can contain nested blocks.");
+
+            if (block.Type == CharacterTabBlockType.Group)
+                throw new ArgumentException("A 'Grupo' block cannot be nested inside another block.");
+
+            if (block.Type == CharacterTabBlockType.Collapse && parent.Type != CharacterTabBlockType.Group)
+                throw new ArgumentException("A 'Registro expansível' block can only be moved inside a 'Grupo' block.");
+
+            if (block.Type == CharacterTabBlockType.Image && parent.Type == CharacterTabBlockType.Image)
+                throw new ArgumentException("An 'Imagem' block cannot be nested inside another one.");
+
+            // Um Grupo aceita blocos que já têm conteúdo aninhado (ex.: personagens com blocos
+            // dentro); nos demais containers o bloco movido precisa estar "vazio" de filhos.
+            if (block.Children.Count > 0 && parent.Type != CharacterTabBlockType.Group)
+                throw new ArgumentException("A block that contains nested blocks can only be moved inside a 'Grupo' block.");
+        }
+
+        // Entra sempre no fim da lista de destino (topo da aba ou filhos do container).
+        var newSiblings = await _characterTabBlockRepository.GetSiblingsAsync(
+            block.CharacterTabId, request.ParentBlockId, cancellationToken);
+        var nextOrder = newSiblings.Count == 0 ? 0 : newSiblings.Max(b => b.Order) + 1;
+
+        block.SetParent(request.ParentBlockId, nextOrder);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ToResponse(block);

@@ -71,6 +71,13 @@ public sealed class CharacterTabBlock : BaseEntity
         SetUpdatedAt();
     }
 
+    public void SetParent(Guid? parentBlockId, int order)
+    {
+        ParentBlockId = parentBlockId;
+        Order = order;
+        SetUpdatedAt();
+    }
+
     public void SetImage(Guid? imageAssetId)
     {
         ImageAssetId = imageAssetId;

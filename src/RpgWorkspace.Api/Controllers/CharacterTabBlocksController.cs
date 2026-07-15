@@ -217,6 +217,37 @@ public class CharacterTabBlocksController : ApiController
         }
     }
 
+    /// <summary>Move um bloco existente pra dentro de um container (Registro expansível/Imagem) ou de volta pro topo da aba (parentBlockId null).</summary>
+    [HttpPut("/api/character-tab-blocks/{id:guid}/parent")]
+    [ProducesResponseType(typeof(CharacterTabBlockResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetParent(
+        Guid id,
+        [FromBody] SetCharacterTabBlockParentRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _characterTabBlockService.SetParentAsync(id, request, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
     /// <summary>Reordena os blocos de topo de uma aba (drag-and-drop).</summary>
     [HttpPut("/api/character-tabs/{characterTabId:guid}/blocks/reorder")]
     [ProducesResponseType(typeof(IReadOnlyList<CharacterTabBlockResponse>), StatusCodes.Status200OK)]

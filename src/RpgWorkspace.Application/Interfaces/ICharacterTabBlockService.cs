@@ -38,6 +38,10 @@ public interface ICharacterTabBlockService
         Guid parentBlockId, ReorderCharacterTabBlocksRequest request, Guid requestingUserId,
         CancellationToken cancellationToken = default);
 
+    Task<CharacterTabBlockResponse> SetParentAsync(
+        Guid blockId, SetCharacterTabBlockParentRequest request, Guid requestingUserId,
+        CancellationToken cancellationToken = default);
+
     Task DeleteAsync(Guid blockId, Guid requestingUserId, CancellationToken cancellationToken = default);
 
     Task<CharacterTabBlockResponse> SetImageAsync(

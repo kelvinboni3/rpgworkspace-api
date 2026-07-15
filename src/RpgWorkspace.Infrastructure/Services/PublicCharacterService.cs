@@ -34,15 +34,17 @@ public sealed class PublicCharacterService : IPublicCharacterService
 
         var tabIds = tabs.Select(t => t.Id).ToList();
 
-        var blocks = tabIds.Count == 0
+        // Todos os blocos das abas públicas numa query; a resolução de identidade faz o
+        // fix-up das navegações e monta a árvore completa (Grupo → Registro → conteúdo).
+        List<CharacterTabBlock> allBlocks = tabIds.Count == 0
             ? []
-            : await _context.CharacterTabBlocks.AsNoTracking()
-                .Include(b => b.Children.OrderBy(c => c.Order))
-                .Where(b => tabIds.Contains(b.CharacterTabId) && b.ParentBlockId == null)
+            : await _context.CharacterTabBlocks.AsNoTrackingWithIdentityResolution()
+                .Where(b => tabIds.Contains(b.CharacterTabId))
                 .OrderBy(b => b.Order)
                 .ToListAsync(cancellationToken);
 
-        var blocksByTab = blocks
+        var blocksByTab = allBlocks
+            .Where(b => b.ParentBlockId == null)
             .GroupBy(b => b.CharacterTabId)
             .ToDictionary(g => g.Key, g => g.OrderBy(b => b.Order).ToList());
 
