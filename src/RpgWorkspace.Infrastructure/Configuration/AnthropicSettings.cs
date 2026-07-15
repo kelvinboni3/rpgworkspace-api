@@ -6,7 +6,10 @@ public sealed class AnthropicSettings
 
     public string ApiKey { get; init; } = string.Empty;
     public string Model { get; init; } = "claude-haiku-4-5";
-    public int MaxOutputTokens { get; init; } = 1024;
+    /// <summary>1024 truncava notas legítimas grandes (ex.: um sistema de códigos/legenda inteiro)
+    /// — JSON cortado por max_tokens nunca parseia e virava um 503 enganoso. O rate limit por
+    /// usuário continua sendo o teto de custo real, não este número.</summary>
+    public int MaxOutputTokens { get; init; } = 4096;
 
     /// <summary>Higher cap for sheet import: extracting a full character sheet produces many more
     /// blocks in one call than a single post-session note does.</summary>

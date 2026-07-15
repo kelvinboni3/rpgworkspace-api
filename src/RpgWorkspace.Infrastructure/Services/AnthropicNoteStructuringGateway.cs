@@ -65,6 +65,7 @@ public sealed class AnthropicNoteStructuringGateway : INoteStructuringGateway
         try
         {
             var response = await CreateMessageAsync(systemPrompt, userContent, maxTokens, requestingUserId, cancellationToken);
+            EnsureNotTruncated(response);
             var text = ExtractText(response);
 
             if (TryParseResult(text, out var result))
@@ -80,12 +81,17 @@ public sealed class AnthropicNoteStructuringGateway : INoteStructuringGateway
                 cancellationToken,
                 previousAssistantText: text,
                 correctionHint: "A resposta anterior não é um JSON válido conforme o schema pedido. Responda novamente só com o JSON correto.");
+            EnsureNotTruncated(retryResponse);
             var retryText = ExtractText(retryResponse);
 
             if (TryParseResult(retryText, out var retryResult))
                 return retryResult;
 
             throw new AiServiceUnavailableException("AI returned invalid structured output after retry.");
+        }
+        catch (AiResponseTooLargeException)
+        {
+            throw;
         }
         catch (AiServiceUnavailableException)
         {
@@ -129,6 +135,17 @@ public sealed class AnthropicNoteStructuringGateway : INoteStructuringGateway
             },
             Messages = messages,
         }, cancellationToken);
+    }
+
+    // JSON cortado por max_tokens é um fracasso determinístico: re-tentar só queima tokens de
+    // novo, e (diferente do recap, que pode ser encurtado) as sugestões precisam cobrir a nota
+    // inteira — a saída aqui é o usuário dividir o texto. 400 acionável em vez de 503 genérico.
+    private static void EnsureNotTruncated(Message response)
+    {
+        if (response.StopReason == StopReason.MaxTokens)
+            throw new AiResponseTooLargeException(
+                "Esse texto gera conteúdo demais de uma vez e a resposta da IA foi cortada no meio. "
+                + "Divida a anotação em partes menores (por assunto) e envie uma de cada vez.");
     }
 
     private static string ExtractText(Message response)

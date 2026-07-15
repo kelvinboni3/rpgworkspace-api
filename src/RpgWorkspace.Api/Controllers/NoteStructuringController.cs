@@ -51,6 +51,10 @@ public class NoteStructuringController : ApiController
         {
             return StatusCode(StatusCodes.Status402PaymentRequired, new { message = ex.Message });
         }
+        catch (AiResponseTooLargeException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
         catch (AiServiceUnavailableException ex)
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
@@ -88,6 +92,10 @@ public class NoteStructuringController : ApiController
         catch (SubscriptionRequiredException ex)
         {
             return StatusCode(StatusCodes.Status402PaymentRequired, new { message = ex.Message });
+        }
+        catch (AiResponseTooLargeException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (AiServiceUnavailableException ex)
         {
