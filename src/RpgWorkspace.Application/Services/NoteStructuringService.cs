@@ -48,6 +48,7 @@ public sealed class NoteStructuringService : INoteStructuringService
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        string? preferredTabName,
         Guid requestingUserId,
         CancellationToken cancellationToken);
 
@@ -56,18 +57,19 @@ public sealed class NoteStructuringService : INoteStructuringService
         StructureNoteRequest request,
         Guid requestingUserId,
         CancellationToken cancellationToken = default)
-        => ProcessAsync(characterId, request.NoteText, requestingUserId, _noteStructuringGateway.StructureAsync, cancellationToken);
+        => ProcessAsync(characterId, request.NoteText, request.PreferredTabName, requestingUserId, _noteStructuringGateway.StructureAsync, cancellationToken);
 
     public Task<StructureNoteResponse> ImportSheetAsync(
         Guid characterId,
         ImportSheetRequest request,
         Guid requestingUserId,
         CancellationToken cancellationToken = default)
-        => ProcessAsync(characterId, request.SheetText, requestingUserId, _noteStructuringGateway.ImportSheetAsync, cancellationToken);
+        => ProcessAsync(characterId, request.SheetText, null, requestingUserId, _noteStructuringGateway.ImportSheetAsync, cancellationToken);
 
     private async Task<StructureNoteResponse> ProcessAsync(
         Guid characterId,
         string text,
+        string? preferredTabName,
         Guid requestingUserId,
         GatewayCall gatewayCall,
         CancellationToken cancellationToken)
@@ -96,7 +98,7 @@ public sealed class NoteStructuringService : INoteStructuringService
         var characterContext = new CharacterContext(
             character.Name, character.Race, character.Class, character.Level, character.Description);
 
-        var result = await gatewayCall(text, characterContext, existingTabs, existingBlocks, requestingUserId, cancellationToken);
+        var result = await gatewayCall(text, characterContext, existingTabs, existingBlocks, preferredTabName, requestingUserId, cancellationToken);
 
         var validated = result.Suggestions
             .Where(s => AllowedBlockTypes.Contains(s.Type))

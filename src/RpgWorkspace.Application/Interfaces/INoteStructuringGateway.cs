@@ -9,6 +9,7 @@ public interface INoteStructuringGateway
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        string? preferredTabName,
         Guid requestingUserId,
         CancellationToken cancellationToken = default);
 
@@ -20,6 +21,7 @@ public interface INoteStructuringGateway
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        string? preferredTabName,
         Guid requestingUserId,
         CancellationToken cancellationToken = default);
 }
