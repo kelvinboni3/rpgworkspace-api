@@ -25,6 +25,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
     private readonly ICharacterTabBlockRepository _characterTabBlockRepository;
     private readonly ICharacterNarrativeGateway _narrativeGateway;
     private readonly ISubscriptionService _subscriptionService;
+    private readonly IAiUsageService _aiUsageService;
     private readonly IUnitOfWork _unitOfWork;
 
     public CharacterNarrativeService(
@@ -35,6 +36,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
         ICharacterTabBlockRepository characterTabBlockRepository,
         ICharacterNarrativeGateway narrativeGateway,
         ISubscriptionService subscriptionService,
+        IAiUsageService aiUsageService,
         IUnitOfWork unitOfWork)
     {
         _characterRepository = characterRepository;
@@ -44,6 +46,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
         _characterTabBlockRepository = characterTabBlockRepository;
         _narrativeGateway = narrativeGateway;
         _subscriptionService = subscriptionService;
+        _aiUsageService = aiUsageService;
         _unitOfWork = unitOfWork;
     }
 
@@ -55,6 +58,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
 
         var text = await _narrativeGateway.GenerateRecapAsync(
             characterContext, existingTabs, existingBlocks, requestingUserId, cancellationToken);
+        await _aiUsageService.TrackAsync(requestingUserId, cancellationToken);
 
         var generatedAt = DateTime.UtcNow;
         character.SetRecap(text, generatedAt);
@@ -71,6 +75,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
 
         var text = await _narrativeGateway.GenerateRetrospectiveAsync(
             characterContext, existingTabs, existingBlocks, requestingUserId, cancellationToken);
+        await _aiUsageService.TrackAsync(requestingUserId, cancellationToken);
 
         character.SetRetrospective(text);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -127,6 +132,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
             _campaignRepository, _workspaceRepository, character.CampaignId, cancellationToken);
         CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
         await _subscriptionService.EnsureAiAccessAsync(requestingUserId, cancellationToken);
+        await _aiUsageService.EnsureWithinQuotaAsync(requestingUserId, cancellationToken);
 
         var tabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
         var existingTabs = tabs.Select(t => (t.Id, t.Name)).ToList();

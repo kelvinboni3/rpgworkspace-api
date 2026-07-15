@@ -24,6 +24,7 @@ public sealed class NoteStructuringService : INoteStructuringService
     private readonly ICharacterTabBlockRepository _characterTabBlockRepository;
     private readonly INoteStructuringGateway _noteStructuringGateway;
     private readonly ISubscriptionService _subscriptionService;
+    private readonly IAiUsageService _aiUsageService;
 
     public NoteStructuringService(
         ICharacterRepository characterRepository,
@@ -32,7 +33,8 @@ public sealed class NoteStructuringService : INoteStructuringService
         ICharacterTabRepository characterTabRepository,
         ICharacterTabBlockRepository characterTabBlockRepository,
         INoteStructuringGateway noteStructuringGateway,
-        ISubscriptionService subscriptionService)
+        ISubscriptionService subscriptionService,
+        IAiUsageService aiUsageService)
     {
         _characterRepository = characterRepository;
         _campaignRepository = campaignRepository;
@@ -41,6 +43,7 @@ public sealed class NoteStructuringService : INoteStructuringService
         _characterTabBlockRepository = characterTabBlockRepository;
         _noteStructuringGateway = noteStructuringGateway;
         _subscriptionService = subscriptionService;
+        _aiUsageService = aiUsageService;
     }
 
     private delegate Task<NoteStructuringResult> GatewayCall(
@@ -79,6 +82,7 @@ public sealed class NoteStructuringService : INoteStructuringService
             _campaignRepository, _workspaceRepository, character.CampaignId, cancellationToken);
         CharacterAuthorizationHelper.EnsureCanManage(character, workspace, requestingUserId, "Character not found.");
         await _subscriptionService.EnsureAiAccessAsync(requestingUserId, cancellationToken);
+        await _aiUsageService.EnsureWithinQuotaAsync(requestingUserId, cancellationToken);
 
         var tabs = await _characterTabRepository.GetAllByCharacterAsync(characterId, cancellationToken);
         var existingTabs = tabs.Select(t => (t.Id, t.Name)).ToList();
@@ -99,6 +103,7 @@ public sealed class NoteStructuringService : INoteStructuringService
             character.Name, character.Race, character.Class, character.Level, character.Description);
 
         var result = await gatewayCall(text, characterContext, existingTabs, existingBlocks, preferredTabName, requestingUserId, cancellationToken);
+        await _aiUsageService.TrackAsync(requestingUserId, cancellationToken);
 
         var validated = result.Suggestions
             .Where(s => AllowedBlockTypes.Contains(s.Type))

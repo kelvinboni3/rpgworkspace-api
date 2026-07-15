@@ -104,6 +104,9 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionGateway, StripeSubscriptionGateway>();
         services.AddScoped<ISubscriptionService, SubscriptionService>();
 
+        services.AddScoped<IAiUsageRepository, AiUsageRepository>();
+        services.AddScoped<IAiUsageService, AiUsageService>();
+
         return services;
     }
 }

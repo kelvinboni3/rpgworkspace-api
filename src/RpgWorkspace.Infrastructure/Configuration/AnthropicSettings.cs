@@ -26,4 +26,8 @@ public sealed class AnthropicSettings
     public int RetrospectiveMaxOutputTokens { get; init; } = 2048;
 
     public int RateLimitPerHour { get; init; } = 20;
+
+    /// <summary>Teto mensal de chamadas de IA por usuário (todas as features de IA somadas). É o freio
+    /// de custo real por conta — o rate limit acima é só anti-rajada. Ajustável no appsettings.</summary>
+    public int MonthlyCallLimitPerUser { get; init; } = 100;
 }
