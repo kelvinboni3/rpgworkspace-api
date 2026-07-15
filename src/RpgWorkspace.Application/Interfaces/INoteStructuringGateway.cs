@@ -9,6 +9,7 @@ public interface INoteStructuringGateway
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default);
 
     /// <summary>Extracts a pasted character sheet (from another tool/PDF text) into a full set of
@@ -19,5 +20,6 @@ public interface INoteStructuringGateway
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default);
 }

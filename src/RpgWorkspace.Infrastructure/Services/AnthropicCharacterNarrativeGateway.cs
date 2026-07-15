@@ -32,33 +32,36 @@ public sealed class AnthropicCharacterNarrativeGateway : ICharacterNarrativeGate
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default)
     {
         var systemPrompt = BuildRecapSystemPrompt();
         var userContent = BuildUserContent(character, existingTabs, existingBlocks);
-        return RunAsync(systemPrompt, userContent, _settings.RecapMaxOutputTokens, cancellationToken);
+        return RunAsync(systemPrompt, userContent, _settings.RecapMaxOutputTokens, requestingUserId, cancellationToken);
     }
 
     public Task<string> GenerateRetrospectiveAsync(
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default)
     {
         var systemPrompt = BuildRetrospectiveSystemPrompt();
         var userContent = BuildUserContent(character, existingTabs, existingBlocks);
-        return RunAsync(systemPrompt, userContent, _settings.RetrospectiveMaxOutputTokens, cancellationToken);
+        return RunAsync(systemPrompt, userContent, _settings.RetrospectiveMaxOutputTokens, requestingUserId, cancellationToken);
     }
 
     private async Task<string> RunAsync(
         string systemPrompt,
         string userContent,
         int maxTokens,
+        Guid requestingUserId,
         CancellationToken cancellationToken)
     {
         try
         {
-            var response = await CreateMessageAsync(systemPrompt, userContent, maxTokens, cancellationToken);
+            var response = await CreateMessageAsync(systemPrompt, userContent, maxTokens, requestingUserId, cancellationToken);
             var text = ExtractText(response);
 
             if (TryParseResult(text, out var result))
@@ -75,6 +78,7 @@ public sealed class AnthropicCharacterNarrativeGateway : ICharacterNarrativeGate
                 systemPrompt,
                 userContent,
                 maxTokens,
+                requestingUserId,
                 cancellationToken,
                 previousAssistantText: text,
                 correctionHint: wasTruncated
@@ -102,6 +106,7 @@ public sealed class AnthropicCharacterNarrativeGateway : ICharacterNarrativeGate
         string systemPrompt,
         string userContent,
         int maxTokens,
+        Guid requestingUserId,
         CancellationToken cancellationToken,
         string? previousAssistantText = null,
         string? correctionHint = null)
@@ -119,6 +124,9 @@ public sealed class AnthropicCharacterNarrativeGateway : ICharacterNarrativeGate
             Model = _settings.Model,
             MaxTokens = maxTokens,
             System = systemPrompt,
+            // Opaque per-user id so Anthropic-side abuse detection can attribute misuse to a
+            // single end user instead of flagging the whole API key.
+            Metadata = new Metadata { UserID = requestingUserId.ToString("N") },
             OutputConfig = new OutputConfig
             {
                 Format = new JsonOutputFormat { Schema = ResponseSchema },

@@ -48,6 +48,7 @@ public sealed class NoteStructuringService : INoteStructuringService
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        Guid requestingUserId,
         CancellationToken cancellationToken);
 
     public Task<StructureNoteResponse> StructureNoteAsync(
@@ -95,7 +96,7 @@ public sealed class NoteStructuringService : INoteStructuringService
         var characterContext = new CharacterContext(
             character.Name, character.Race, character.Class, character.Level, character.Description);
 
-        var result = await gatewayCall(text, characterContext, existingTabs, existingBlocks, cancellationToken);
+        var result = await gatewayCall(text, characterContext, existingTabs, existingBlocks, requestingUserId, cancellationToken);
 
         var validated = result.Suggestions
             .Where(s => AllowedBlockTypes.Contains(s.Type))

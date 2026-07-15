@@ -54,7 +54,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
             await LoadContextAsync(characterId, requestingUserId, cancellationToken);
 
         var text = await _narrativeGateway.GenerateRecapAsync(
-            characterContext, existingTabs, existingBlocks, cancellationToken);
+            characterContext, existingTabs, existingBlocks, requestingUserId, cancellationToken);
 
         var generatedAt = DateTime.UtcNow;
         character.SetRecap(text, generatedAt);
@@ -70,7 +70,7 @@ public sealed class CharacterNarrativeService : ICharacterNarrativeService
             await LoadContextAsync(characterId, requestingUserId, cancellationToken);
 
         var text = await _narrativeGateway.GenerateRetrospectiveAsync(
-            characterContext, existingTabs, existingBlocks, cancellationToken);
+            characterContext, existingTabs, existingBlocks, requestingUserId, cancellationToken);
 
         character.SetRetrospective(text);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

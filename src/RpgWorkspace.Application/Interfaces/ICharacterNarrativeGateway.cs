@@ -13,6 +13,7 @@ public interface ICharacterNarrativeGateway
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default);
 
     /// <summary>Closing narrative for a character whose campaign has ended.</summary>
@@ -20,5 +21,6 @@ public interface ICharacterNarrativeGateway
         CharacterContext character,
         IReadOnlyList<(Guid Id, string Name)> existingTabs,
         IReadOnlyList<ExistingBlockContext> existingBlocks,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default);
 }
