@@ -6,7 +6,7 @@ namespace RpgWorkspace.Application.Services;
 
 public sealed class BookVolumeService : IBookVolumeService
 {
-    private const long MaxFileSizeBytes = 200 * 1024 * 1024;
+    private const long MaxFileSizeBytes = 20 * 1024 * 1024;
 
     private readonly IBookVolumeRepository _bookVolumeRepository;
     private readonly ICharacterTabBlockRepository _characterTabBlockRepository;

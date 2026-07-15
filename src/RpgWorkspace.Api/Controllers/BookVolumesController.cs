@@ -42,8 +42,8 @@ public class BookVolumesController : ApiController
     /// <summary>Sobe um novo PDF como próximo volume do livro.</summary>
     [HttpPost("/api/character-tab-blocks/{characterTabBlockId:guid}/book-volumes")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(200 * 1024 * 1024)]
-    [RequestFormLimits(MultipartBodyLengthLimit = 200 * 1024 * 1024)]
+    [RequestSizeLimit(21 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 21 * 1024 * 1024)]
     [ProducesResponseType(typeof(BookVolumeResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

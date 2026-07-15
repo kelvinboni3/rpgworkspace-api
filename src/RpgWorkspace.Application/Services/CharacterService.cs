@@ -10,6 +10,8 @@ public sealed class CharacterService : ICharacterService
     private static readonly string[] DefaultTabNames =
         ["Status", "Diário", "Itens Narrativos", "Teorias", "Operações", "Pessoas"];
 
+    private const long MaxImageFileSizeBytes = 5 * 1024 * 1024;
+
     private readonly ICharacterRepository _characterRepository;
     private readonly ICampaignRepository _campaignRepository;
     private readonly IWorkspaceRepository _workspaceRepository;
@@ -204,6 +206,9 @@ public sealed class CharacterService : ICharacterService
 
         if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("Only image files are accepted.");
+
+        if (fileSizeBytes <= 0 || fileSizeBytes > MaxImageFileSizeBytes)
+            throw new ArgumentException($"File size must be between 1 byte and {MaxImageFileSizeBytes / (1024 * 1024)} MB.");
 
         using var memoryStream = new MemoryStream();
         await content.CopyToAsync(memoryStream, cancellationToken);

@@ -359,7 +359,7 @@ public class CharacterTabBlocksController : ApiController
     /// <summary>Sobe/troca a imagem associada a um bloco (Imagem ou Registro Expansível).</summary>
     [HttpPost("/api/character-tab-blocks/{id:guid}/image")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(10 * 1024 * 1024)]
+    [RequestSizeLimit(6 * 1024 * 1024)]
     [ProducesResponseType(typeof(CharacterTabBlockResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

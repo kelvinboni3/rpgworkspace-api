@@ -8,6 +8,8 @@ namespace RpgWorkspace.Application.Services;
 
 public sealed class CharacterTabBlockService : ICharacterTabBlockService
 {
+    private const long MaxImageFileSizeBytes = 5 * 1024 * 1024;
+
     private readonly ICharacterTabBlockRepository _characterTabBlockRepository;
     private readonly ICharacterTabRepository _characterTabRepository;
     private readonly ICharacterRepository _characterRepository;
@@ -323,6 +325,9 @@ public sealed class CharacterTabBlockService : ICharacterTabBlockService
 
         if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("Only image files are accepted.");
+
+        if (fileSizeBytes <= 0 || fileSizeBytes > MaxImageFileSizeBytes)
+            throw new ArgumentException($"File size must be between 1 byte and {MaxImageFileSizeBytes / (1024 * 1024)} MB.");
 
         using var memoryStream = new MemoryStream();
         await content.CopyToAsync(memoryStream, cancellationToken);

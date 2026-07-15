@@ -168,7 +168,7 @@ public class CharactersController : ApiController
     /// <summary>Sobe o retrato de um personagem.</summary>
     [HttpPost("{id:guid}/portrait")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(10 * 1024 * 1024)]
+    [RequestSizeLimit(6 * 1024 * 1024)]
     [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
