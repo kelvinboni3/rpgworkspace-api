@@ -6,10 +6,13 @@ public sealed class AnthropicSettings
 
     public string ApiKey { get; init; } = string.Empty;
     public string Model { get; init; } = "claude-haiku-4-5";
-    /// <summary>1024 truncava notas legítimas grandes (ex.: um sistema de códigos/legenda inteiro)
-    /// — JSON cortado por max_tokens nunca parseia e virava um 503 enganoso. O rate limit por
-    /// usuário continua sendo o teto de custo real, não este número.</summary>
-    public int MaxOutputTokens { get; init; } = 4096;
+    /// <summary>Teto de saída, não o que é sempre gerado (só se paga pelos tokens realmente
+    /// produzidos), então pode ser generoso. 4096 cortava notas que a Davena decompõe em muitos
+    /// blocos (ex.: sessão zero = diário + 1 bloco por pessoa citada): JSON cortado por max_tokens
+    /// nunca parseia e vira um 400 "texto gera conteúdo demais". Haiku 4.5 suporta até 64K de saída;
+    /// 16384 dá folga larga sem chegar perto do teto. O rate limit por usuário é o teto de custo
+    /// real, não este número.</summary>
+    public int MaxOutputTokens { get; init; } = 16384;
 
     /// <summary>Higher cap for sheet import: extracting a full character sheet produces many more
     /// blocks in one call than a single post-session note does.</summary>
